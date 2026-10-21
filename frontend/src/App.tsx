@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { catalogApi, type CatalogApi } from './api/client';
-import type { GraphResponse } from './api/types';
+import type { GraphResponse, TableModel } from './api/types';
+import { ErdCanvas } from './components/ErdCanvas';
 import { CatalogSelector, type CatalogSelection } from './components/CatalogSelector';
 import { StatusBanner } from './components/StatusBanner';
 
@@ -9,9 +10,12 @@ export type AppProps = { api?: CatalogApi };
 export function App({ api = catalogApi }: AppProps) {
   const [selection, setSelection] = useState<CatalogSelection>({ service: null, database: null, schema: null });
   const [graph, setGraph] = useState<GraphResponse | null>(null);
+  const [selectedTable, setSelectedTable] = useState<TableModel | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const schemaId = selection.schema?.id;
+
+  useEffect(() => { setSelectedTable(null); }, [graph?.schema.id]);
 
   useEffect(() => {
     if (!schemaId) {
@@ -54,11 +58,13 @@ export function App({ api = catalogApi }: AppProps) {
               <h2>{graph.schema.name} diagram</h2>
               <p>{graph.tables.length} tables · {graph.relationships.length} relationships</p>
               {graph.tables.length === 0 && <p>No tables in this schema.</p>}
+              {graph.tables.length > 0 && <ErdCanvas graph={graph} onSelectedTableChange={setSelectedTable} />}
             </>
           ) : (
             <p>Select a service, database, and schema to view its diagram.</p>
           )}
         </section>
+        {selectedTable && <aside aria-label="Selected table"><h2>{selectedTable.name}</h2></aside>}
       </main>
     </div>
   );

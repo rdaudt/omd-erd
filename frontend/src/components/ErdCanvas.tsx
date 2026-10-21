@@ -1,0 +1,113 @@
+/// <reference types="vite/client" />
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Background, ReactFlow, ReactFlowProvider, applyNodeChanges, type NodeChange, type ReactFlowInstance } from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import type { GraphResponse, TableModel } from '../api/types';
+import { layoutGraph, type RelationshipFlowEdge, type TableFlowNode } from '../graph/layout';
+import { relatedIds, resetViewState, visibleGraph } from '../graph/viewState';
+import { CanvasControls } from './CanvasControls';
+import { RelationshipEdge } from './RelationshipEdge';
+import { TableNode } from './TableNode';
+
+export type ErdCanvasProps = { graph: GraphResponse; onSelectedTableChange: (table: TableModel | null) => void };
+const nodeTypes = { table: TableNode };
+const edgeTypes = { relationship: RelationshipEdge };
+
+// Remount only on schema identity changes, so schema view state cannot leak.
+export function ErdCanvas(props: ErdCanvasProps) {
+  return <ReactFlowProvider key={props.graph.schema.id}><Canvas {...props} /></ReactFlowProvider>;
+}
+
+function Canvas({ graph, onSelectedTableChange }: ErdCanvasProps) {
+  const [view, setView] = useState(resetViewState);
+  const [baseNodes, setBaseNodes] = useState<TableFlowNode[]>([]);
+  const [baseEdges, setBaseEdges] = useState<RelationshipFlowEdge[]>([]);
+  const [revision, setRevision] = useState(0);
+  const [fitRevision, setFitRevision] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [instance, setInstance] = useState<ReactFlowInstance<TableFlowNode, RelationshipFlowEdge> | null>(null);
+  const appliedRevision = useRef<number | null>(null);
+  const viewRef = useRef(view);
+  const selectedCallback = useRef(onSelectedTableChange);
+  viewRef.current = view;
+  selectedCallback.current = onSelectedTableChange;
+
+  useEffect(() => { selectedCallback.current(null); }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const preservePositions = appliedRevision.current === revision;
+    setLoading(true);
+    setError(null);
+    layoutGraph(graph, viewRef.current.collapsedIds).then((result) => {
+      if (cancelled) return;
+      setBaseNodes((previous) => {
+        const positions = new Map(previous.map((node) => [node.id, node.position]));
+        return result.nodes.map((node) => ({ ...node, position: preservePositions ? positions.get(node.id) ?? node.position : node.position }));
+      });
+      setBaseEdges(result.edges);
+      appliedRevision.current = revision;
+      if (!preservePositions) setFitRevision((value) => value + 1);
+      setLoading(false);
+    }).catch((cause: unknown) => {
+      if (!cancelled) {
+        setError(cause instanceof Error ? cause.message : 'Unable to lay out diagram');
+        setLoading(false);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [graph, revision]);
+
+  useEffect(() => {
+    if (instance && fitRevision > 0) void instance.fitView({ padding: 0.15, duration: 350 });
+  }, [instance, fitRevision]);
+
+  const onInit = useCallback((flow: ReactFlowInstance<TableFlowNode, RelationshipFlowEdge>) => { setInstance(flow); }, []);
+  const select = useCallback((id: string) => {
+    setView((previous) => ({ ...previous, selectedId: id }));
+    selectedCallback.current(graph.tables.find((table) => table.id === id) ?? null);
+  }, [graph.tables]);
+  const toggleCollapsed = useCallback((id: string) => {
+    setView((previous) => {
+      const collapsedIds = new Set(previous.collapsedIds);
+      if (collapsedIds.has(id)) collapsedIds.delete(id); else collapsedIds.add(id);
+      return { ...previous, collapsedIds };
+    });
+  }, []);
+  const hide = useCallback((id: string) => {
+    const clearSelection = viewRef.current.selectedId === id;
+    setView((previous) => ({ ...previous, hiddenIds: new Set([...previous.hiddenIds, id]), selectedId: previous.selectedId === id ? null : previous.selectedId }));
+    if (clearSelection) selectedCallback.current(null);
+  }, []);
+  const onNodesChange = useCallback((changes: NodeChange<TableFlowNode>[]) => {
+    setBaseNodes((previous) => applyNodeChanges(changes, previous));
+  }, []);
+  const visible = useMemo(() => visibleGraph(graph, view.hiddenIds), [graph, view.hiddenIds]);
+  const neighbors = useMemo(() => relatedIds(graph, view.selectedId), [graph, view.selectedId]);
+  const tables = new Map(visible.tables.map((table) => [table.id, table]));
+  const nodes = baseNodes.filter((node) => tables.has(node.id)).map((node) => ({
+    ...node, selected: node.id === view.selectedId,
+    style: { opacity: view.selectedId && node.id !== view.selectedId && !neighbors.has(node.id) ? 0.35 : 1 },
+    data: { table: tables.get(node.id)!, collapsed: view.collapsedIds.has(node.id), related: neighbors.has(node.id), onSelect: select, onToggleCollapsed: toggleCollapsed, onHide: hide },
+  }));
+  const relationshipIds = new Set(visible.relationships.map((edge) => edge.id));
+  const edges = baseEdges.filter((edge) => relationshipIds.has(edge.id)).map((edge) => ({
+    ...edge, style: { stroke: '#64748b', strokeWidth: 1.5, opacity: view.selectedId && edge.source !== view.selectedId && edge.target !== view.selectedId ? 0.25 : 1 },
+  }));
+
+  return <div className="erd-canvas" style={{ height: '70vh', minHeight: 400, width: '100%', position: 'relative' }} aria-label={`${graph.schema.name} ERD`}>
+    {loading && <p role="status">Laying out diagram…</p>}
+    {error && <p role="alert">{error}</p>}
+    <ReactFlow<TableFlowNode, RelationshipFlowEdge> nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes}
+      onInit={onInit} onNodesChange={onNodesChange} onNodeClick={(_event, node) => select(node.id)}
+      nodesConnectable={false} edgesReconnectable={false} deleteKeyCode={null} minZoom={0.1} maxZoom={2}>
+      <Background />
+      <CanvasControls onRelayout={() => setRevision((value) => value + 1)}
+        onCollapseAll={() => setView((previous) => ({ ...previous, collapsedIds: new Set(graph.tables.map((table) => table.id)) }))}
+        onExpandAll={() => setView((previous) => ({ ...previous, collapsedIds: new Set() }))}
+        onRestoreAll={() => setView((previous) => ({ ...previous, hiddenIds: new Set() }))}
+        hiddenCount={view.hiddenIds.size} disabled={loading || graph.tables.length === 0} />
+    </ReactFlow>
+  </div>;
+}
