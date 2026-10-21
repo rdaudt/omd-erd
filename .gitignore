@@ -17,6 +17,7 @@ coverage/
 
 # Local brainstorming companion
 .superpowers/
+.worktrees/
 
 # Editor and OS files
 .vscode/
