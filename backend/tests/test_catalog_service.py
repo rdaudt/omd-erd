@@ -1,6 +1,6 @@
 import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError
-from metadata.generated.schema.entity.data.table import ConstraintType, DataType, TableConstraint
+from metadata.generated.schema.entity.data.table import Column, Constraint, ConstraintType, DataType, TableConstraint
 
 from app.catalog_service import CatalogNotFoundError, CatalogService
 from app.config import Settings
@@ -14,7 +14,7 @@ def graph_column(name: str, data_type=DataType.INT):
     return SimpleNamespace(
         name=SimpleNamespace(root=name),
         dataType=data_type,
-        nullable=True,
+        constraint=None,
         description=None,
     )
 
@@ -73,6 +73,41 @@ def test_graph_normalizes_sdk_shaped_tables_and_foreign_keys(fake_reader):
     assert fake_reader.calls[0].fields == []
     assert fake_reader.calls[1].fields == ["columns", "tableConstraints", "owners", "tags"]
     assert fake_reader.calls[1].params == {"databaseSchema": "svc.db.dbo", "limit": 100}
+
+
+@pytest.mark.parametrize(
+    "constraint,expected_nullable,expected_primary",
+    [
+        (Constraint.NULL, True, False),
+        (Constraint.NOT_NULL, False, False),
+        (Constraint.PRIMARY_KEY, False, True),
+        (None, True, False),
+    ],
+)
+def test_graph_maps_generated_column_constraint(fake_reader, constraint, expected_nullable, expected_primary):
+    column = Column(name="id", dataType=DataType.INT, constraint=constraint)
+    assert not hasattr(column, "nullable")
+    add_graph_schema(fake_reader, [graph_table("customer", "customer", "svc.db.dbo.customer", [column])])
+
+    graph = CatalogService(fake_reader, cache_ttl_seconds=60).get_schema_graph("schema-1")
+
+    mapped = graph.tables[0].columns[0]
+    assert mapped.nullable is expected_nullable
+    assert mapped.primaryKey is expected_primary
+
+
+def test_graph_table_primary_key_constraint_marks_generated_column_non_nullable(fake_reader):
+    column = Column(name="id", dataType=DataType.INT)
+    table = graph_table(
+        "customer", "customer", "svc.db.dbo.customer", [column],
+        [TableConstraint(constraintType=ConstraintType.PRIMARY_KEY, columns=["id"])],
+    )
+    add_graph_schema(fake_reader, [table])
+
+    mapped = CatalogService(fake_reader, cache_ttl_seconds=60).get_schema_graph("schema-1").tables[0].columns[0]
+
+    assert mapped.primaryKey is True
+    assert mapped.nullable is False
 
 
 def test_graph_skips_malformed_constraints_with_warning(fake_reader):

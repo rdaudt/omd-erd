@@ -47,11 +47,13 @@ def _column_flags(table) -> tuple[set[str], set[str]]:
 
 def _map_column(column, primary_keys: set[str], foreign_keys: set[str]) -> ColumnModel:
     name = _text(column.name) or ""
+    constraint = _text(getattr(column, "constraint", None))
+    is_primary_key = name in primary_keys or constraint == "PRIMARY_KEY"
     return ColumnModel(
         name=name,
         dataType=_text(column.dataType) or "UNKNOWN",
-        nullable=bool(getattr(column, "nullable", True)),
-        primaryKey=name in primary_keys,
+        nullable=not is_primary_key and constraint != "NOT_NULL",
+        primaryKey=is_primary_key,
         foreignKey=name in foreign_keys,
         description=_text(getattr(column, "description", None)),
     )
