@@ -32,6 +32,7 @@ describe('ELK layout adapter', () => {
     expect(result.edges[0]).toMatchObject({ id: 'fk', source: 'Orders', target: 'Customer', data: { sourceColumn: 'customer_id', targetColumn: 'id', label: 'Orders.customer_id references Customer.id' } });
     expect(result.edges[0].sourceHandle).toBe(edge.sources[0]);
     expect(result.edges[0].targetHandle).toBe(edge.targets[0]);
+    expect(result.edges[0].markerEnd).toMatchObject({ type: 'arrowclosed' });
   });
   it('returns empty graph without invoking ELK', async () => {
     expect(await layoutGraph({ ...graph, tables: [], relationships: [] }, new Set())).toEqual({ nodes: [], edges: [] });

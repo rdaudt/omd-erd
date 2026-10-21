@@ -26,7 +26,7 @@ describe('CatalogSelector', () => {
     const onSelectionChange = vi.fn();
     render(<CatalogSelector api={api} onSelectionChange={onSelectionChange} />);
 
-    const serviceSelect = await screen.findByRole('combobox', { name: 'Service' });
+    const serviceSelect = await screen.findByRole('combobox', { name: 'Database service' });
     const databaseSelect = screen.getByRole('combobox', { name: 'Database' });
     const schemaSelect = screen.getByRole('combobox', { name: 'Schema' });
     expect(databaseSelect).toBeDisabled();
@@ -63,7 +63,7 @@ describe('CatalogSelector', () => {
     const api = catalogApi({ listDatabases });
     render(<CatalogSelector api={api} onSelectionChange={vi.fn()} />);
 
-    const serviceSelect = await screen.findByRole('combobox', { name: 'Service' });
+    const serviceSelect = await screen.findByRole('combobox', { name: 'Database service' });
     await user.selectOptions(serviceSelect, service.id);
     const previousSignal = listDatabases.mock.calls[0]?.[1] as AbortSignal;
     await user.selectOptions(serviceSelect, 'service-2');

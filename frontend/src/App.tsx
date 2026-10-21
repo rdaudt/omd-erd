@@ -32,6 +32,9 @@ export function App({ api = catalogApi }: AppProps) {
 
   useEffect(() => {
     if (!schemaId) {
+      setGraph(null);
+      setSelectedTable(null);
+      setDisplayState(null);
       setLoading(false);
       setError(null);
       return;

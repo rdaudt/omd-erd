@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { CatalogApi } from './api/client';
@@ -31,12 +31,28 @@ function api(getGraph: CatalogApi['getGraph']): CatalogApi {
 }
 
 async function selectSchema(user: ReturnType<typeof userEvent.setup>, schema: CatalogItem) {
-  await user.selectOptions(await screen.findByRole('combobox', { name: 'Service' }), service.id);
-  await user.selectOptions(await screen.findByRole('combobox', { name: 'Database' }), database.id);
-  await user.selectOptions(await screen.findByRole('combobox', { name: 'Schema' }), schema.id);
+  for (const [name, value] of [['Database service', service.id], ['Database', database.id], ['Schema', schema.id]]) {
+    const select = await screen.findByRole('combobox', { name });
+    await waitFor(() => expect(select).toBeEnabled());
+    await user.selectOptions(select, value);
+  }
 }
 
 describe('App graph loading', () => {
+  it.each(['Database service', 'Database', 'Schema'])('clears the diagram and selected metadata when %s is cleared', async (label) => {
+    const user = userEvent.setup();
+    const table = { id: 'orders', name: 'Orders', fullyQualifiedName: 'Person.Orders', description: 'Selected metadata', owner: null, tags: [], tier: null, columns: [] };
+    render(<App api={api(vi.fn(async () => ({ ...graph(schemaOne), tables: [table] })))} />);
+    await selectSchema(user, schemaOne);
+    await user.click(await screen.findByRole('button', { name: 'Select first table' }));
+    expect(screen.getByRole('complementary', { name: 'Selected table' })).toHaveTextContent('Selected metadata');
+    await user.selectOptions(screen.getByRole('combobox', { name: label }), '');
+    expect(screen.queryByText('Person diagram')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Select first table' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('complementary', { name: 'Selected table' })).not.toBeInTheDocument();
+    expect(screen.getByRole('complementary', { name: 'Diagram inspector' })).toHaveTextContent('0 tables');
+  });
+
   it('loads only after schema selection and keeps the last graph during a replacement request', async () => {
     const user = userEvent.setup();
     let resolveSecond: (value: GraphResponse) => void = () => undefined;

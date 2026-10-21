@@ -18,6 +18,7 @@ describe('self-referencing relationship geometry', () => {
       sourceY={sourceY} targetY={targetY} sourcePosition={Position.Right} targetPosition={Position.Left}
       data={{ sourceColumn: 'manager_id', targetColumn: 'id', label }} /></svg>);
     const path = screen.getByRole('img', { name: label }).querySelector('path.react-flow__edge-path')!.getAttribute('d')!;
+    expect(screen.getByText('manager_id → id', { selector: 'text' })).toBeInTheDocument();
     const points = Array.from(path.matchAll(/[ML]\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/g), (match) => ({ x: Number(match[1]), y: Number(match[2]) }));
     expect(points[0]).toEqual({ x: 380, y: sourceY });
     expect(points.at(-1)).toEqual({ x: 100, y: targetY });

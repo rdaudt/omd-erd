@@ -1,3 +1,5 @@
+from functools import cached_property
+
 from metadata.generated.schema.entity.services.connections.metadata.openMetadataConnection import (
     AuthProvider,
     OpenMetadataConnection,
@@ -12,14 +14,20 @@ from app.config import Settings
 
 class OpenMetadataReader:
     def __init__(self, settings: Settings):
-        connection = OpenMetadataConnection(
+        self._connection = OpenMetadataConnection(
             hostPort=settings.omd_host,
             authProvider=AuthProvider.openmetadata,
             securityConfig=OpenMetadataJWTClientConfig(jwtToken=settings.omd_token),
         )
-        self._client = OpenMetadata(
-            connection,
-            additional_client_config_arguments={"timeout": settings.request_timeout_seconds},
+        self._request_timeout_seconds = settings.request_timeout_seconds
+
+    @cached_property
+    def _client(self) -> OpenMetadata:
+        # SDK construction probes the server version. Defer that network call
+        # until a read so graph fallback also covers first-request outages.
+        return OpenMetadata(
+            self._connection,
+            additional_client_config_arguments={"timeout": self._request_timeout_seconds},
         )
 
     def list_entities(self, *, entity, fields: list[str], params: dict[str, str | int]):

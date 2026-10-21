@@ -2,12 +2,21 @@ import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { ReactFlowInstance, ReactFlowProps } from '@xyflow/react';
+import type { ElkNode } from 'elkjs/lib/elk-api';
 import type { GraphResponse } from '../api/types';
 import type { RelationshipFlowEdge, TableFlowNode } from '../graph/layout';
 import { ErdCanvas } from './ErdCanvas';
 import { App } from '../App';
 
 const { fitView, updateNodeInternals, nodeMeasurement } = vi.hoisted(() => ({ fitView: vi.fn(async () => true), updateNodeInternals: vi.fn(), nodeMeasurement: { ready: true } }));
+
+// Canvas tests exercise view state, not ELK's engine or its download latency.
+// layout.test.ts verifies the adapter; the browser test uses the real engine.
+vi.mock('elkjs/lib/elk.bundled.js', () => ({ default: class {
+  async layout(input: ElkNode) {
+    return { ...input, children: input.children?.map((node, index) => ({ ...node, x: index * 400, y: 80 })) };
+  }
+} }));
 
 // jsdom has no measurable viewport. Keep our custom nodes/edges and state real;
 // replace only the React Flow viewport boundary with an event adapter.
@@ -90,7 +99,7 @@ describe('ERD canvas interactions', () => {
     const service = { id: 'service', name: 'Service', fullyQualifiedName: 'Service' };
     render(<App api={{ listServices: vi.fn(async () => [service]), listDatabases: vi.fn(async () => [service]), listSchemas: vi.fn(async () => [graph.schema]), getGraph: vi.fn(async () => graph) }} />);
     const panel = screen.getByRole('complementary', { name: 'Diagram inspector' });
-    await user.selectOptions(await screen.findByRole('combobox', { name: 'Service' }), service.id);
+    await user.selectOptions(await screen.findByRole('combobox', { name: 'Database service' }), service.id);
     await user.selectOptions(await screen.findByRole('combobox', { name: 'Database' }), service.id);
     await user.selectOptions(await screen.findByRole('combobox', { name: 'Schema' }), graph.schema.id);
     await user.click(await screen.findByRole('button', { name: 'Select Orders' }));
@@ -146,6 +155,7 @@ describe('ERD canvas interactions', () => {
     await user.click(screen.getByRole('button', { name: 'Restore all tables' }));
     rerender(<ErdCanvas graph={{ ...graph, warnings: ['Refreshed'] }} onSelectedTableChange={vi.fn()} />);
     expect(screen.getByLabelText('Orders position')).toHaveTextContent('777,333');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Relayout diagram' })).toBeEnabled());
     await user.click(screen.getByRole('button', { name: 'Relayout diagram' }));
     await waitFor(() => expect(screen.getByLabelText('Orders position')).not.toHaveTextContent('777,333'));
   });
@@ -174,7 +184,7 @@ describe('ERD canvas interactions', () => {
       listSchemas: vi.fn(async () => [graph.schema, emptySchema]),
       getGraph: vi.fn(async (schemaId) => schemaId === emptySchema.id ? { ...graph, schema: emptySchema, tables: [], relationships: [] } : graph),
     }} />);
-    await user.selectOptions(await screen.findByRole('combobox', { name: 'Service' }), service.id);
+    await user.selectOptions(await screen.findByRole('combobox', { name: 'Database service' }), service.id);
     await user.selectOptions(await screen.findByRole('combobox', { name: 'Database' }), database.id);
     await user.selectOptions(await screen.findByRole('combobox', { name: 'Schema' }), graph.schema.id);
     await user.click(await screen.findByRole('button', { name: 'Select Orders' }));

@@ -1,5 +1,4 @@
-import type { Edge, Node } from '@xyflow/react';
-import ELK from 'elkjs/lib/elk.bundled.js';
+import { MarkerType, type Edge, type Node } from '@xyflow/react';
 import type { ElkNode } from 'elkjs/lib/elk-api';
 import type { GraphResponse, TableModel } from '../api/types';
 
@@ -28,7 +27,14 @@ export function columnPortTop(index: number, collapsed: boolean): number {
   return collapsed ? HEADER_HEIGHT / 2 : HEADER_HEIGHT + (index + 0.5) * COLUMN_HEIGHT;
 }
 
-const elk = new ELK();
+// Keep the layout engine out of the initial application download. The canvas
+// already displays its layout status while this promise loads and runs ELK.
+let elkPromise: Promise<import('elkjs/lib/elk-api').ELK> | undefined;
+
+function loadElk() {
+  elkPromise ??= import('elkjs/lib/elk.bundled.js').then(({ default: ELK }) => new ELK());
+  return elkPromise;
+}
 
 export async function layoutGraph(graph: GraphResponse, collapsedIds: ReadonlySet<string>): Promise<LayoutResult> {
   if (graph.tables.length === 0) return { nodes: [], edges: [] };
@@ -44,6 +50,7 @@ export async function layoutGraph(graph: GraphResponse, collapsedIds: ReadonlySe
         label: `${tables.get(edge.sourceTableId)!.name}.${edge.sourceColumn} references ${tables.get(edge.targetTableId)!.name}.${edge.targetColumn}`,
       },
       ariaLabel: `${tables.get(edge.sourceTableId)!.name}.${edge.sourceColumn} references ${tables.get(edge.targetTableId)!.name}.${edge.targetColumn}`,
+      markerEnd: { type: MarkerType.ArrowClosed, color: '#a69cc7', width: 18, height: 18 },
       deletable: false, reconnectable: false,
     }));
   const input: ElkNode = {
@@ -66,11 +73,12 @@ export async function layoutGraph(graph: GraphResponse, collapsedIds: ReadonlySe
     }),
     edges: edges.map((edge) => ({ id: edge.id, sources: [edge.sourceHandle!], targets: [edge.targetHandle!] })),
   };
+  const elk = await loadElk();
   const result = await elk.layout(input);
   const positions = new Map(result.children?.map((node) => [node.id, { x: node.x ?? 0, y: node.y ?? 0 }]));
   return {
     nodes: graph.tables.map((table) => ({
-      id: table.id, type: 'table', position: positions.get(table.id) ?? { x: 0, y: 0 },
+      id: table.id, type: 'table', ariaLabel: `${table.name} table`, position: positions.get(table.id) ?? { x: 0, y: 0 },
       data: { table, collapsed: collapsedIds.has(table.id) },
       width: TABLE_WIDTH, dragHandle: '.table-node-header', deletable: false,
     })),

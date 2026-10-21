@@ -110,7 +110,7 @@ export function CatalogSelector({ api, onSelectionChange }: CatalogSelectorProps
   return (
     <div className="catalog-selector" aria-label="Catalog selection">
       <label>
-        Service
+        Database service
         <select value={selection.service?.id ?? ''} onChange={(event) => selectService(event.target.value)} disabled={loading === 'services'}>
           <option value="">Select a service</option>
           {services.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}

@@ -4,6 +4,9 @@ from types import SimpleNamespace
 from app.catalog_service import CatalogNotFoundError
 import app.main as main
 from app.main import create_app
+from app.config import Settings
+from app import openmetadata_client
+from metadata.ingestion.ometa.client import RestTransportError
 
 
 class StubCatalogService:
@@ -111,3 +114,23 @@ def test_all_catalog_routes_reject_post():
 
     for path in ["/api/services", "/api/databases", "/api/schemas", "/api/schemas/schema-1/graph"]:
         assert client.post(path).status_code == 405
+
+
+def test_first_graph_request_falls_back_when_sdk_version_probe_is_unavailable(monkeypatch):
+    attempts = []
+
+    def unavailable_sdk(*args, **kwargs):
+        attempts.append(True)
+        raise RestTransportError('GET', 'http://localhost:8585/api/v1/system/version', ConnectionError('offline'))
+
+    monkeypatch.setattr(openmetadata_client, 'OpenMetadata', unavailable_sdk)
+    monkeypatch.setattr(main, 'get_settings', lambda: Settings(OMD_HOST='http://localhost:8585/api', OMD_TOKEN='test-token'))
+    client = TestClient(create_app(), raise_server_exceptions=False)
+
+    for _ in range(2):
+        response = client.get('/api/schemas/known-schema/graph')
+        assert response.status_code == 200
+        assert response.json()['source'] == 'sample'
+        assert response.json()['tables']
+        assert response.json()['warnings']
+    assert len(attempts) == 2  # Failed initialization is retried, not cached forever.
