@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 
 from app.catalog_service import CatalogNotFoundError, CatalogService
 from app.config import get_settings
-from app.models import CatalogItem
+from app.models import CatalogItem, GraphResponse
 from app.openmetadata_client import OpenMetadataReader
 
 
@@ -18,6 +18,9 @@ class CatalogServiceProtocol(Protocol):
         raise NotImplementedError
 
     def list_schemas(self, database_id: str) -> list[CatalogItem]:
+        raise NotImplementedError
+
+    def get_schema_graph(self, schema_id: str, refresh: bool = False) -> GraphResponse:
         raise NotImplementedError
 
 
@@ -57,6 +60,10 @@ def create_app(catalog_service: CatalogServiceProtocol | None = None) -> FastAPI
     @app.get("/api/schemas", response_model=list[CatalogItem])
     def list_schemas(databaseId: str) -> list[CatalogItem]:
         return get_catalog_service().list_schemas(databaseId)
+
+    @app.get("/api/schemas/{schema_id}/graph", response_model=GraphResponse, response_model_by_alias=True)
+    def get_graph(schema_id: str, refresh: bool = False) -> GraphResponse:
+        return get_catalog_service().get_schema_graph(schema_id, refresh=refresh)
 
     return app
 

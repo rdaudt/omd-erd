@@ -20,6 +20,16 @@ class StubCatalogService:
             raise CatalogNotFoundError(database_id)
         return [{"id": "schema-1", "name": "dbo", "fullyQualifiedName": "MSSQL Desktop.Warehouse.dbo"}]
 
+    def get_schema_graph(self, schema_id: str, refresh: bool = False):
+        self.graph_request = (schema_id, refresh)
+        return {
+            "source": "sample",
+            "schema": {"id": schema_id, "name": "dbo", "fullyQualifiedName": "MSSQL Desktop.Warehouse.dbo"},
+            "tables": [],
+            "relationships": [],
+            "warnings": ["OpenMetadata is unavailable; showing bundled sample data."],
+        }
+
 
 def test_services_contract_is_read_only():
     client = TestClient(create_app(StubCatalogService()))
@@ -81,3 +91,23 @@ def test_default_app_lazily_constructs_one_catalog_service(monkeypatch):
     assert client.get("/api/services").status_code == 200
     assert client.get("/api/databases", params={"serviceId": "svc-1"}).status_code == 200
     assert constructions == [(reader, 60)]
+
+
+def test_graph_route_serializes_schema_alias_and_forwards_refresh():
+    service = StubCatalogService()
+    client = TestClient(create_app(service))
+
+    response = client.get("/api/schemas/schema-1/graph", params={"refresh": "true"})
+
+    assert response.status_code == 200
+    assert response.json()["schema"]["id"] == "schema-1"
+    assert "schema_" not in response.json()
+    assert response.json()["warnings"]
+    assert service.graph_request == ("schema-1", True)
+
+
+def test_all_catalog_routes_reject_post():
+    client = TestClient(create_app(StubCatalogService()))
+
+    for path in ["/api/services", "/api/databases", "/api/schemas", "/api/schemas/schema-1/graph"]:
+        assert client.post(path).status_code == 405

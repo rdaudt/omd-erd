@@ -1,10 +1,229 @@
 import pytest
+from requests.exceptions import ConnectionError as RequestsConnectionError
+from metadata.generated.schema.entity.data.table import ConstraintType, DataType, TableConstraint
 
 from app.catalog_service import CatalogNotFoundError, CatalogService
 from app.config import Settings
 from app import openmetadata_client
 from app.openmetadata_client import OpenMetadataReader
 from conftest import Page, entity
+from types import SimpleNamespace
+
+
+def graph_column(name: str, data_type=DataType.INT):
+    return SimpleNamespace(
+        name=SimpleNamespace(root=name),
+        dataType=data_type,
+        nullable=True,
+        description=None,
+    )
+
+
+def graph_table(table_id: str, name: str, fqn: str, columns, constraints=None, *, owners=None, tags=None):
+    table = entity(table_id, name, fqn)
+    table.columns = columns
+    table.tableConstraints = constraints
+    table.description = None
+    table.owners = SimpleNamespace(root=owners or [])
+    table.tags = tags or []
+    return table
+
+
+def add_graph_schema(fake_reader, tables):
+    fake_reader.add_parent("DatabaseSchema", "schema-1", entity("schema-1", "dbo", "svc.db.dbo"))
+    fake_reader.add_pages("Table", [Page(tables)], databaseSchema="svc.db.dbo")
+
+
+def test_graph_normalizes_sdk_shaped_tables_and_foreign_keys(fake_reader):
+    customer = graph_table(
+        "customer", "customer", "svc.db.dbo.customer", [graph_column("id")],
+        [TableConstraint(constraintType=ConstraintType.PRIMARY_KEY, columns=["id"])],
+        owners=[SimpleNamespace(displayName="Data Architecture", name="data_arch")],
+        tags=[SimpleNamespace(tagFQN=SimpleNamespace(root="Tier.Tier1")), SimpleNamespace(tagFQN=SimpleNamespace(root="PII.Sensitive"))],
+    )
+    orders = graph_table(
+        "orders", "orders", "svc.db.dbo.orders", [graph_column("id"), graph_column("customer_id")],
+        [TableConstraint(
+            constraintType=ConstraintType.FOREIGN_KEY,
+            columns=["customer_id"],
+            referredColumns=["svc.db.dbo.customer.id"],
+        )],
+    )
+    add_graph_schema(fake_reader, [orders, customer])
+    service = CatalogService(fake_reader, cache_ttl_seconds=60)
+
+    graph = service.get_schema_graph("schema-1")
+
+    assert graph.source == "live"
+    assert [table.name for table in graph.tables] == ["customer", "orders"]
+    assert graph.tables[0].owner == "Data Architecture"
+    assert graph.tables[0].tier == "Tier1"
+    assert graph.tables[0].tags == ["PII.Sensitive"]
+    assert graph.tables[0].columns[0].primaryKey is True
+    assert graph.tables[0].columns[0].dataType == "INT"
+    assert graph.tables[1].columns[1].foreignKey is True
+    assert graph.relationships[0].model_dump() == {
+        "id": "orders.customer_id->customer.id",
+        "sourceTableId": "orders",
+        "sourceColumn": "customer_id",
+        "targetTableId": "customer",
+        "targetColumn": "id",
+    }
+    assert graph.warnings == []
+    assert fake_reader.calls[0].fields == []
+    assert fake_reader.calls[1].fields == ["columns", "tableConstraints", "owners", "tags"]
+    assert fake_reader.calls[1].params == {"databaseSchema": "svc.db.dbo", "limit": 100}
+
+
+def test_graph_skips_malformed_constraints_with_warning(fake_reader):
+    orders = graph_table(
+        "orders", "orders", "svc.db.dbo.orders", [graph_column("id"), graph_column("customer_id")],
+        [TableConstraint(constraintType=ConstraintType.FOREIGN_KEY, columns=["customer_id"], referredColumns=["missing.table.id"])],
+    )
+    add_graph_schema(fake_reader, [orders])
+
+    graph = CatalogService(fake_reader, cache_ttl_seconds=60).get_schema_graph("schema-1")
+
+    assert graph.relationships == []
+    assert graph.warnings
+    assert "missing.table.id" in graph.warnings[0]
+
+
+def test_graph_skips_incomplete_foreign_key_pairs(fake_reader):
+    orders = graph_table(
+        "orders", "orders", "svc.db.dbo.orders", [graph_column("customer_id")],
+        [TableConstraint(constraintType=ConstraintType.FOREIGN_KEY, columns=["customer_id"], referredColumns=[])],
+    )
+    add_graph_schema(fake_reader, [orders])
+
+    graph = CatalogService(fake_reader, cache_ttl_seconds=60).get_schema_graph("schema-1")
+
+    assert graph.relationships == []
+    assert len(graph.warnings) == 1
+    assert "do not match" in graph.warnings[0]
+
+
+def test_graph_skips_missing_local_or_target_columns(fake_reader):
+    customer = graph_table("customer", "customer", "svc.db.dbo.customer", [graph_column("id")])
+    orders = graph_table(
+        "orders", "orders", "svc.db.dbo.orders", [graph_column("id")],
+        [TableConstraint(
+            constraintType=ConstraintType.FOREIGN_KEY,
+            columns=["absent", "id"],
+            referredColumns=["svc.db.dbo.customer.id", "svc.db.dbo.customer.absent"],
+        )],
+    )
+    add_graph_schema(fake_reader, [orders, customer])
+
+    graph = CatalogService(fake_reader, cache_ttl_seconds=60).get_schema_graph("schema-1")
+
+    assert graph.relationships == []
+    assert len(graph.warnings) == 2
+
+
+def test_graph_resolves_longest_qualified_table_prefix(fake_reader):
+    customer = graph_table("customer", "customer", "svc.db.dbo.customer", [graph_column("id")])
+    customer_region = graph_table("customer_region", "customer.region", "svc.db.dbo.customer.region", [graph_column("id")])
+    orders = graph_table(
+        "orders", "orders", "svc.db.dbo.orders", [graph_column("region_id")],
+        [TableConstraint(
+            constraintType=ConstraintType.FOREIGN_KEY,
+            columns=["region_id"],
+            referredColumns=["svc.db.dbo.customer.region.id"],
+        )],
+    )
+    add_graph_schema(fake_reader, [orders, customer, customer_region])
+
+    graph = CatalogService(fake_reader, cache_ttl_seconds=60).get_schema_graph("schema-1")
+
+    assert len(graph.relationships) == 1
+    assert graph.relationships[0].targetTableId == "customer_region"
+    assert graph.warnings == []
+
+
+def test_graph_empty_schema_is_live_and_empty(fake_reader):
+    add_graph_schema(fake_reader, [])
+
+    graph = CatalogService(fake_reader, cache_ttl_seconds=60).get_schema_graph("schema-1")
+
+    assert graph.source == "live"
+    assert graph.tables == []
+    assert graph.relationships == []
+    assert graph.warnings == []
+
+
+def test_graph_cache_reuses_live_result_and_refresh_bypasses_it(fake_reader):
+    add_graph_schema(fake_reader, [graph_table("customer", "customer", "svc.db.dbo.customer", [graph_column("id")])])
+    service = CatalogService(fake_reader, cache_ttl_seconds=60)
+
+    first = service.get_schema_graph("schema-1")
+    cached = service.get_schema_graph("schema-1")
+    refreshed = service.get_schema_graph("schema-1", refresh=True)
+
+    assert cached is first
+    assert refreshed is not first
+    assert [call.method for call in fake_reader.calls] == ["get_by_id", "list_entities", "get_by_id", "list_entities"]
+
+
+def test_graph_cache_expires(fake_reader, monkeypatch):
+    add_graph_schema(fake_reader, [])
+    clock = iter([100.0, 105.0, 111.0])
+    monkeypatch.setattr("app.catalog_service.monotonic", lambda: next(clock))
+    service = CatalogService(fake_reader, cache_ttl_seconds=10)
+
+    first = service.get_schema_graph("schema-1")
+    assert service.get_schema_graph("schema-1") is first
+    assert service.get_schema_graph("schema-1") is not first
+
+
+def test_graph_connectivity_failure_uses_sample_without_caching(fake_reader, monkeypatch):
+    add_graph_schema(fake_reader, [])
+    original = fake_reader.get_by_id
+    attempts = 0
+
+    def failing_once(**kwargs):
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise RequestsConnectionError("connection refused")
+        return original(**kwargs)
+
+    monkeypatch.setattr(fake_reader, "get_by_id", failing_once)
+    service = CatalogService(fake_reader, cache_ttl_seconds=60)
+
+    sample = service.get_schema_graph("schema-1")
+    live = service.get_schema_graph("schema-1")
+
+    assert sample.source == "sample"
+    assert len(sample.tables) >= 4
+    assert sample.relationships
+    assert sample.warnings
+    assert live.source == "live"
+
+
+def test_graph_programming_error_propagates(fake_reader, monkeypatch):
+    add_graph_schema(fake_reader, [])
+    monkeypatch.setattr(fake_reader, "get_by_id", lambda **kwargs: (_ for _ in ()).throw(ValueError("bad normalization")))
+
+    with pytest.raises(ValueError, match="bad normalization"):
+        CatalogService(fake_reader, cache_ttl_seconds=60).get_schema_graph("schema-1")
+
+
+def test_graph_unknown_schema_raises_not_found(fake_reader):
+    with pytest.raises(CatalogNotFoundError):
+        CatalogService(fake_reader, cache_ttl_seconds=60).get_schema_graph("missing")
+
+    assert len(fake_reader.calls) == 1
+
+
+def test_graph_table_listing_failure_uses_sample(fake_reader, monkeypatch):
+    add_graph_schema(fake_reader, [])
+    monkeypatch.setattr(fake_reader, "list_entities", lambda **kwargs: (_ for _ in ()).throw(RequestsConnectionError("offline")))
+
+    graph = CatalogService(fake_reader, cache_ttl_seconds=60).get_schema_graph("schema-1")
+
+    assert graph.source == "sample"
+    assert graph.warnings
 
 
 def test_list_services_follows_pages_and_sorts_by_name(fake_reader):

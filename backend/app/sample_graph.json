@@ -1,0 +1,47 @@
+{
+  "source": "sample",
+  "schema": {"id": "adventureworks-sales", "name": "Sales", "fullyQualifiedName": "AdventureWorks.Sales"},
+  "tables": [
+    {
+      "id": "customer", "name": "Customer", "fullyQualifiedName": "AdventureWorks.Sales.Customer",
+      "description": "Customers placing orders", "owner": "Sales Analytics", "tags": [], "tier": "Tier1",
+      "columns": [
+        {"name": "CustomerID", "dataType": "INT", "nullable": false, "primaryKey": true},
+        {"name": "AccountNumber", "dataType": "VARCHAR", "nullable": false}
+      ]
+    },
+    {
+      "id": "product", "name": "Product", "fullyQualifiedName": "AdventureWorks.Sales.Product",
+      "description": "Products available for sale", "owner": "Sales Analytics", "tags": [], "tier": "Tier1",
+      "columns": [
+        {"name": "ProductID", "dataType": "INT", "nullable": false, "primaryKey": true},
+        {"name": "Name", "dataType": "VARCHAR", "nullable": false}
+      ]
+    },
+    {
+      "id": "salesorderheader", "name": "SalesOrderHeader", "fullyQualifiedName": "AdventureWorks.Sales.SalesOrderHeader",
+      "description": "Order headers", "owner": "Sales Analytics", "tags": [], "tier": "Tier1",
+      "columns": [
+        {"name": "SalesOrderID", "dataType": "INT", "nullable": false, "primaryKey": true},
+        {"name": "CustomerID", "dataType": "INT", "nullable": false, "foreignKey": true},
+        {"name": "OrderDate", "dataType": "DATETIME", "nullable": false}
+      ]
+    },
+    {
+      "id": "salesorderdetail", "name": "SalesOrderDetail", "fullyQualifiedName": "AdventureWorks.Sales.SalesOrderDetail",
+      "description": "Products on each order", "owner": "Sales Analytics", "tags": [], "tier": "Tier1",
+      "columns": [
+        {"name": "SalesOrderDetailID", "dataType": "INT", "nullable": false, "primaryKey": true},
+        {"name": "SalesOrderID", "dataType": "INT", "nullable": false, "foreignKey": true},
+        {"name": "ProductID", "dataType": "INT", "nullable": false, "foreignKey": true},
+        {"name": "OrderQty", "dataType": "SMALLINT", "nullable": false}
+      ]
+    }
+  ],
+  "relationships": [
+    {"id": "salesorderheader.CustomerID->customer.CustomerID", "sourceTableId": "salesorderheader", "sourceColumn": "CustomerID", "targetTableId": "customer", "targetColumn": "CustomerID"},
+    {"id": "salesorderdetail.SalesOrderID->salesorderheader.SalesOrderID", "sourceTableId": "salesorderdetail", "sourceColumn": "SalesOrderID", "targetTableId": "salesorderheader", "targetColumn": "SalesOrderID"},
+    {"id": "salesorderdetail.ProductID->product.ProductID", "sourceTableId": "salesorderdetail", "sourceColumn": "ProductID", "targetTableId": "product", "targetColumn": "ProductID"}
+  ],
+  "warnings": ["OpenMetadata is unavailable; showing bundled AdventureWorks sample data."]
+}
