@@ -36,6 +36,17 @@ function Canvas({ graph, onSelectedTableChange }: ErdCanvasProps) {
   useEffect(() => { selectedCallback.current(null); }, []);
 
   useEffect(() => {
+    const selectedId = viewRef.current.selectedId;
+    if (selectedId === null) return;
+    const table = graph.tables.find((item) => item.id === selectedId) ?? null;
+    if (!table) {
+      viewRef.current = { ...viewRef.current, selectedId: null };
+      setView((previous) => ({ ...previous, selectedId: null }));
+    }
+    selectedCallback.current(table);
+  }, [graph.tables]);
+
+  useEffect(() => {
     let cancelled = false;
     const preservePositions = appliedRevision.current === revision;
     setLoading(true);
@@ -64,9 +75,13 @@ function Canvas({ graph, onSelectedTableChange }: ErdCanvasProps) {
   }, [instance, fitRevision]);
 
   const onInit = useCallback((flow: ReactFlowInstance<TableFlowNode, RelationshipFlowEdge>) => { setInstance(flow); }, []);
-  const select = useCallback((id: string) => {
-    setView((previous) => ({ ...previous, selectedId: id }));
-    selectedCallback.current(graph.tables.find((table) => table.id === id) ?? null);
+  const select = useCallback((id: string | null) => {
+    const table = graph.tables.find((item) => item.id === id && !viewRef.current.hiddenIds.has(item.id)) ?? null;
+    const selectedId = table?.id ?? null;
+    if (viewRef.current.selectedId === selectedId) return;
+    viewRef.current = { ...viewRef.current, selectedId };
+    setView((previous) => ({ ...previous, selectedId }));
+    selectedCallback.current(table);
   }, [graph.tables]);
   const toggleCollapsed = useCallback((id: string) => {
     setView((previous) => {
@@ -76,13 +91,16 @@ function Canvas({ graph, onSelectedTableChange }: ErdCanvasProps) {
     });
   }, []);
   const hide = useCallback((id: string) => {
-    const clearSelection = viewRef.current.selectedId === id;
-    setView((previous) => ({ ...previous, hiddenIds: new Set([...previous.hiddenIds, id]), selectedId: previous.selectedId === id ? null : previous.selectedId }));
-    if (clearSelection) selectedCallback.current(null);
-  }, []);
+    if (viewRef.current.selectedId === id) select(null);
+    setView((previous) => ({ ...previous, hiddenIds: new Set([...previous.hiddenIds, id]) }));
+  }, [select]);
   const onNodesChange = useCallback((changes: NodeChange<TableFlowNode>[]) => {
     setBaseNodes((previous) => applyNodeChanges(changes, previous));
-  }, []);
+    const selectionChanges = changes.filter((change) => change.type === 'select');
+    const selected = selectionChanges.find((change) => change.selected);
+    if (selected) select(selected.id);
+    else if (selectionChanges.some((change) => change.id === viewRef.current.selectedId)) select(null);
+  }, [select]);
   const visible = useMemo(() => visibleGraph(graph, view.hiddenIds), [graph, view.hiddenIds]);
   const neighbors = useMemo(() => relatedIds(graph, view.selectedId), [graph, view.selectedId]);
   const tables = new Map(visible.tables.map((table) => [table.id, table]));
@@ -101,6 +119,7 @@ function Canvas({ graph, onSelectedTableChange }: ErdCanvasProps) {
     {error && <p role="alert">{error}</p>}
     <ReactFlow<TableFlowNode, RelationshipFlowEdge> nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes}
       onInit={onInit} onNodesChange={onNodesChange} onNodeClick={(_event, node) => select(node.id)}
+      onPaneClick={() => select(null)} multiSelectionKeyCode={null}
       nodesConnectable={false} edgesReconnectable={false} deleteKeyCode={null} minZoom={0.1} maxZoom={2}>
       <Background />
       <CanvasControls onRelayout={() => setRevision((value) => value + 1)}

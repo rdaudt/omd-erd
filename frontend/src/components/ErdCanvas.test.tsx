@@ -16,13 +16,18 @@ vi.mock('@xyflow/react', async (importOriginal) => {
   const { createElement, useEffect } = await import('react');
   return {
     ...actual,
-    ReactFlow: ({ nodes = [], edges = [], nodeTypes, edgeTypes, onInit, onNodesChange, onNodeClick, nodesConnectable, children }: ReactFlowProps<TableFlowNode, RelationshipFlowEdge>) => {
+    ReactFlow: ({ nodes = [], edges = [], nodeTypes, edgeTypes, onInit, onNodesChange, onNodeClick, onPaneClick, nodesConnectable, children }: ReactFlowProps<TableFlowNode, RelationshipFlowEdge>) => {
       useEffect(() => { onInit?.({ fitView } as unknown as ReactFlowInstance<TableFlowNode, RelationshipFlowEdge>); }, [onInit]);
       return <div aria-label="Graph viewport" data-connectable={String(nodesConnectable)}>
-        {nodes.map((node) => <div key={node.id} onClick={(event) => onNodeClick?.(event, node)}>
+        <button onClick={(event) => onPaneClick?.(event)}>Click empty canvas</button>
+        {nodes.map((node) => <div key={node.id} style={node.style} onClick={(event) => onNodeClick?.(event, node)}>
           {createElement(nodeTypes!.table, { ...node, selected: node.selected ?? false, dragging: false, isConnectable: false, zIndex: 0, draggable: true, selectable: true, deletable: false, positionAbsoluteX: node.position.x, positionAbsoluteY: node.position.y })}
           <output aria-label={`${node.id} position`}>{`${node.position.x},${node.position.y}`}</output>
           <button onClick={() => onNodesChange?.([{ id: node.id, type: 'position', position: { x: 777, y: 333 } }])}>Move {node.id}</button>
+          <button onClick={(event) => event.stopPropagation()} onKeyDown={(event) => {
+            event.stopPropagation();
+            if (event.key === 'Enter') onNodesChange?.([{ id: node.id, type: 'select', selected: !node.selected }]);
+          }}>Native selection {node.id}</button>
         </div>)}
         <svg>{edges.map((edge) => createElement(edgeTypes!.relationship, { ...edge, data: edge.data, type: edge.type, key: edge.id, sourceX: 280, sourceY: 50, targetX: 400, targetY: 50, sourcePosition: actual.Position.Right, targetPosition: actual.Position.Left, markerStart: undefined, markerEnd: undefined, selected: false, selectable: false, deletable: false }))}</svg>
         {children}
@@ -119,5 +124,49 @@ describe('ERD canvas interactions', () => {
     await user.selectOptions(screen.getByRole('combobox', { name: 'Schema' }), emptySchema.id);
     await screen.findByText('No tables in this schema.');
     expect(screen.queryByRole('complementary', { name: 'Selected table' })).not.toBeInTheDocument();
+  });
+
+  it('clears selection and highlighting if the selected table disappears in the same schema', async () => {
+    const user = userEvent.setup();
+    const onSelectedTableChange = vi.fn();
+    const isolated = { ...graph.tables[1], id: 'Audit', name: 'Audit' };
+    const { rerender } = render(<ErdCanvas graph={{ ...graph, tables: [...graph.tables, isolated] }} onSelectedTableChange={onSelectedTableChange} />);
+    await user.click(await screen.findByRole('button', { name: 'Select Orders' }));
+    expect(screen.getByRole('article', { name: 'Audit table, expanded' }).parentElement).toHaveStyle({ opacity: 0.35 });
+    rerender(<ErdCanvas graph={{ ...graph, tables: [graph.tables[1], isolated], relationships: [] }} onSelectedTableChange={onSelectedTableChange} />);
+    await waitFor(() => expect(onSelectedTableChange).toHaveBeenLastCalledWith(null));
+    expect(screen.getByRole('article', { name: 'Audit table, expanded' }).parentElement).toHaveStyle({ opacity: 1 });
+  });
+
+  it('notifies the parent with current metadata when a selected table is refreshed', async () => {
+    const user = userEvent.setup();
+    const onSelectedTableChange = vi.fn();
+    const { rerender } = render(<ErdCanvas graph={graph} onSelectedTableChange={onSelectedTableChange} />);
+    await user.click(await screen.findByRole('button', { name: 'Select Orders' }));
+    const updated = { ...graph.tables[0], description: 'Current description', owner: 'New owner' };
+    rerender(<ErdCanvas graph={{ ...graph, tables: [updated, graph.tables[1]] }} onSelectedTableChange={onSelectedTableChange} />);
+    await waitFor(() => expect(onSelectedTableChange).toHaveBeenLastCalledWith(updated));
+    expect(onSelectedTableChange.mock.lastCall?.[0]).toBe(updated);
+    expect(screen.getByRole('button', { name: 'Select Orders' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('synchronizes pane deselection and native keyboard selection changes with the parent and highlighting', async () => {
+    const user = userEvent.setup();
+    const onSelectedTableChange = vi.fn();
+    const isolated = { ...graph.tables[1], id: 'Audit', name: 'Audit' };
+    render(<ErdCanvas graph={{ ...graph, tables: [...graph.tables, isolated] }} onSelectedTableChange={onSelectedTableChange} />);
+    await user.click(await screen.findByRole('button', { name: 'Select Orders' }));
+    await user.click(screen.getByRole('button', { name: 'Click empty canvas' }));
+    expect(onSelectedTableChange).toHaveBeenLastCalledWith(null);
+    expect(screen.getByRole('button', { name: 'Select Orders' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('article', { name: 'Audit table, expanded' }).parentElement).toHaveStyle({ opacity: 1 });
+    screen.getByRole('button', { name: 'Native selection Orders' }).focus();
+    await user.keyboard('{Enter}');
+    expect(onSelectedTableChange).toHaveBeenLastCalledWith(graph.tables[0]);
+    expect(screen.getByRole('button', { name: 'Select Orders' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('article', { name: 'Audit table, expanded' }).parentElement).toHaveStyle({ opacity: 0.35 });
+    await user.keyboard('{Enter}');
+    expect(onSelectedTableChange).toHaveBeenLastCalledWith(null);
+    expect(screen.getByRole('button', { name: 'Select Orders' })).toHaveAttribute('aria-pressed', 'false');
   });
 });
