@@ -1,19 +1,28 @@
 import { useEffect, useState } from 'react';
 import { catalogApi, type CatalogApi } from './api/client';
 import type { GraphResponse, TableModel } from './api/types';
-import { ErdCanvas } from './components/ErdCanvas';
+import { ErdCanvas, type CanvasDisplayState } from './components/ErdCanvas';
+import { InspectorPanel } from './components/InspectorPanel';
 import { CatalogSelector, type CatalogSelection } from './components/CatalogSelector';
 import { StatusBanner } from './components/StatusBanner';
+import './styles.css';
 
 export type AppProps = { api?: CatalogApi };
+const emptyDisplayState: CanvasDisplayState = {
+  hiddenTableIds: new Set<string>(), disabled: true,
+  onRestoreTable: () => undefined, onRestoreAll: () => undefined,
+  onCollapseAll: () => undefined, onExpandAll: () => undefined, onRelayout: () => undefined,
+};
 
 export function App({ api = catalogApi }: AppProps) {
   const [selection, setSelection] = useState<CatalogSelection>({ service: null, database: null, schema: null });
   const [graph, setGraph] = useState<GraphResponse | null>(null);
   const [selectedTable, setSelectedTable] = useState<TableModel | null>(null);
+  const [displayState, setDisplayState] = useState<CanvasDisplayState | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const schemaId = selection.schema?.id;
+  const inspectedTable = graph?.tables.find((table) => table.id === selectedTable?.id) ?? null;
 
   useEffect(() => { setSelectedTable(null); }, [graph?.schema.id]);
 
@@ -49,7 +58,7 @@ export function App({ api = catalogApi }: AppProps) {
     <div className="app-shell">
       <header className="app-header">
         <div>
-          <p>OpenMetadata</p>
+          <p className="eyebrow">OpenMetadata</p>
           <h1>Schema explorer</h1>
         </div>
         <CatalogSelector api={api} onSelectionChange={setSelection} />
@@ -59,16 +68,16 @@ export function App({ api = catalogApi }: AppProps) {
         <section className="diagram-shell" aria-label="Diagram">
           {graph ? (
             <>
-              <h2>{graph.schema.name} diagram</h2>
-              <p>{graph.tables.length} tables · {graph.relationships.length} relationships</p>
-              {graph.tables.length === 0 && <p>No tables in this schema.</p>}
-              {graph.tables.length > 0 && <ErdCanvas graph={graph} onSelectedTableChange={setSelectedTable} />}
+              <div className="diagram-heading"><h2>{graph.schema.name} diagram</h2>
+                <p>{graph.tables.length} tables · {graph.relationships.length} relationships</p></div>
+              {graph.tables.length === 0 && <div className="empty-state"><p>No tables in this schema.</p></div>}
+              {graph.tables.length > 0 && <ErdCanvas graph={graph} onSelectedTableChange={setSelectedTable} onDisplayStateChange={setDisplayState} />}
             </>
           ) : (
-            <p>Select a service, database, and schema to view its diagram.</p>
+            <div className="empty-state"><p className="eyebrow">Explore your catalog</p><h2>Every relationship, in view.</h2><p>Select a service, database, and schema to view its diagram.</p></div>
           )}
         </section>
-        {selectedTable && <aside aria-label="Selected table"><h2>{selectedTable.name}</h2></aside>}
+        <InspectorPanel graph={graph} selectedTable={inspectedTable} {...(displayState ?? emptyDisplayState)} />
       </main>
     </div>
   );

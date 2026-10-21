@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Background, ReactFlow, ReactFlowProvider, applyNodeChanges, type NodeChange, type ReactFlowInstance } from '@xyflow/react';
+import { Background, ReactFlow, ReactFlowProvider, applyNodeChanges, useNodesInitialized, type NodeChange, type ReactFlowInstance } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import type { GraphResponse, TableModel } from '../api/types';
 import { layoutGraph, type RelationshipFlowEdge, type TableFlowNode } from '../graph/layout';
@@ -9,7 +9,20 @@ import { CanvasControls } from './CanvasControls';
 import { RelationshipEdge } from './RelationshipEdge';
 import { TableNode } from './TableNode';
 
-export type ErdCanvasProps = { graph: GraphResponse; onSelectedTableChange: (table: TableModel | null) => void };
+export type CanvasDisplayState = {
+  hiddenTableIds: ReadonlySet<string>;
+  disabled: boolean;
+  onRestoreTable: (id: string) => void;
+  onRestoreAll: () => void;
+  onCollapseAll: () => void;
+  onExpandAll: () => void;
+  onRelayout: () => void;
+};
+export type ErdCanvasProps = {
+  graph: GraphResponse;
+  onSelectedTableChange: (table: TableModel | null) => void;
+  onDisplayStateChange?: (state: CanvasDisplayState | null) => void;
+};
 const nodeTypes = { table: TableNode };
 const edgeTypes = { relationship: RelationshipEdge };
 
@@ -18,7 +31,7 @@ export function ErdCanvas(props: ErdCanvasProps) {
   return <ReactFlowProvider key={props.graph.schema.id}><Canvas {...props} /></ReactFlowProvider>;
 }
 
-function Canvas({ graph, onSelectedTableChange }: ErdCanvasProps) {
+function Canvas({ graph, onSelectedTableChange, onDisplayStateChange }: ErdCanvasProps) {
   const [view, setView] = useState(resetViewState);
   const [baseNodes, setBaseNodes] = useState<TableFlowNode[]>([]);
   const [baseEdges, setBaseEdges] = useState<RelationshipFlowEdge[]>([]);
@@ -28,6 +41,8 @@ function Canvas({ graph, onSelectedTableChange }: ErdCanvasProps) {
   const [loading, setLoading] = useState(true);
   const [instance, setInstance] = useState<ReactFlowInstance<TableFlowNode, RelationshipFlowEdge> | null>(null);
   const appliedRevision = useRef<number | null>(null);
+  const appliedFitRevision = useRef(0);
+  const nodesInitialized = useNodesInitialized();
   const viewRef = useRef(view);
   const selectedCallback = useRef(onSelectedTableChange);
   viewRef.current = view;
@@ -71,8 +86,11 @@ function Canvas({ graph, onSelectedTableChange }: ErdCanvasProps) {
   }, [graph, revision]);
 
   useEffect(() => {
-    if (instance && fitRevision > 0) void instance.fitView({ padding: 0.15, duration: 350 });
-  }, [instance, fitRevision]);
+    if (!instance || !nodesInitialized || fitRevision <= appliedFitRevision.current) return;
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    appliedFitRevision.current = fitRevision;
+    void instance.fitView({ padding: 0.15, duration: reducedMotion ? 0 : 350 });
+  }, [instance, fitRevision, nodesInitialized]);
 
   const onInit = useCallback((flow: ReactFlowInstance<TableFlowNode, RelationshipFlowEdge>) => { setInstance(flow); }, []);
   const select = useCallback((id: string | null) => {
@@ -94,6 +112,23 @@ function Canvas({ graph, onSelectedTableChange }: ErdCanvasProps) {
     if (viewRef.current.selectedId === id) select(null);
     setView((previous) => ({ ...previous, hiddenIds: new Set([...previous.hiddenIds, id]) }));
   }, [select]);
+  const restoreTable = useCallback((id: string) => {
+    setView((previous) => {
+      const hiddenIds = new Set(previous.hiddenIds);
+      hiddenIds.delete(id);
+      return { ...previous, hiddenIds };
+    });
+  }, []);
+  const restoreAll = useCallback(() => setView((previous) => ({ ...previous, hiddenIds: new Set<string>() })), []);
+  const collapseAll = useCallback(() => setView((previous) => ({ ...previous, collapsedIds: new Set(graph.tables.map((table) => table.id)) })), [graph.tables]);
+  const expandAll = useCallback(() => setView((previous) => ({ ...previous, collapsedIds: new Set<string>() })), []);
+  const relayout = useCallback(() => setRevision((value) => value + 1), []);
+  const displayState = useMemo<CanvasDisplayState>(() => ({
+    hiddenTableIds: view.hiddenIds, disabled: loading || graph.tables.length === 0,
+    onRestoreTable: restoreTable, onRestoreAll: restoreAll, onCollapseAll: collapseAll, onExpandAll: expandAll, onRelayout: relayout,
+  }), [view.hiddenIds, loading, graph.tables.length, restoreTable, restoreAll, collapseAll, expandAll, relayout]);
+  useEffect(() => { onDisplayStateChange?.(displayState); }, [onDisplayStateChange, displayState]);
+  useEffect(() => () => { onDisplayStateChange?.(null); }, [onDisplayStateChange]);
   const onNodesChange = useCallback((changes: NodeChange<TableFlowNode>[]) => {
     setBaseNodes((previous) => applyNodeChanges(changes, previous));
     const selectionChanges = changes.filter((change) => change.type === 'select');
@@ -111,21 +146,21 @@ function Canvas({ graph, onSelectedTableChange }: ErdCanvasProps) {
   }));
   const relationshipIds = new Set(visible.relationships.map((edge) => edge.id));
   const edges = baseEdges.filter((edge) => relationshipIds.has(edge.id)).map((edge) => ({
-    ...edge, style: { stroke: '#64748b', strokeWidth: 1.5, opacity: view.selectedId && edge.source !== view.selectedId && edge.target !== view.selectedId ? 0.25 : 1 },
+    ...edge, style: { stroke: 'var(--edge-color, #a69cc7)', strokeWidth: 1.6, opacity: view.selectedId && edge.source !== view.selectedId && edge.target !== view.selectedId ? 0.25 : 1 },
   }));
 
-  return <div className="erd-canvas" style={{ height: '70vh', minHeight: 400, width: '100%', position: 'relative' }} aria-label={`${graph.schema.name} ERD`}>
-    {loading && <p role="status">Laying out diagram…</p>}
-    {error && <p role="alert">{error}</p>}
+  return <div className="erd-canvas" aria-label={`${graph.schema.name} ERD`}>
+    {loading && <p className="canvas-notice" role="status">Laying out diagram…</p>}
+    {error && <p className="canvas-notice is-error" role="alert">{error}</p>}
     <ReactFlow<TableFlowNode, RelationshipFlowEdge> nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes}
       onInit={onInit} onNodesChange={onNodesChange} onNodeClick={(_event, node) => select(node.id)}
       onPaneClick={() => select(null)} multiSelectionKeyCode={null}
-      nodesConnectable={false} edgesReconnectable={false} deleteKeyCode={null} minZoom={0.1} maxZoom={2}>
-      <Background />
-      <CanvasControls onRelayout={() => setRevision((value) => value + 1)}
-        onCollapseAll={() => setView((previous) => ({ ...previous, collapsedIds: new Set(graph.tables.map((table) => table.id)) }))}
-        onExpandAll={() => setView((previous) => ({ ...previous, collapsedIds: new Set() }))}
-        onRestoreAll={() => setView((previous) => ({ ...previous, hiddenIds: new Set() }))}
+      nodesConnectable={false} edgesReconnectable={false} deleteKeyCode={null} minZoom={0.1} maxZoom={2} colorMode="dark">
+      <Background gap={24} size={1} color="var(--grid-dot)" />
+      <CanvasControls onRelayout={relayout}
+        onCollapseAll={collapseAll}
+        onExpandAll={expandAll}
+        onRestoreAll={restoreAll}
         hiddenCount={view.hiddenIds.size} disabled={loading || graph.tables.length === 0} />
     </ReactFlow>
   </div>;

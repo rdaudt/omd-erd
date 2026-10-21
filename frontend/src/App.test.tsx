@@ -84,6 +84,9 @@ describe('App graph loading', () => {
     await selectSchema(user, schemaOne);
     expect(await screen.findByText('Sample data — OpenMetadata unavailable')).toBeInTheDocument();
     expect(screen.getByText('One relationship was skipped')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Diagram status' })).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Data source' })).toHaveTextContent('Sample data');
+    expect(screen.getByRole('status', { name: 'Diagram warnings' })).toHaveTextContent('One relationship was skipped');
   });
 
   it('shows a failed graph request without discarding the previous diagram', async () => {

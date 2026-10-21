@@ -11,11 +11,11 @@ export function StatusBanner({ loading, error, source, warnings }: StatusBannerP
   if (!loading && !error && source !== 'sample' && warnings.length === 0) return null;
 
   return (
-    <div className="status-banner" aria-label="Diagram status">
-      {loading && <p role="status">Loading diagram…</p>}
+    <section className="status-banner" aria-label="Diagram status">
+      {loading && <p className="loading-status" role="status">Loading diagram…</p>}
       {error && <p role="alert">{error}</p>}
-      {source === 'sample' && <p>Sample data — OpenMetadata unavailable</p>}
-      {warnings.map((warning, index) => <p key={`${index}-${warning}`}>{warning}</p>)}
-    </div>
+      {source === 'sample' && <p className="sample-status" role="status" aria-label="Data source">Sample data — OpenMetadata unavailable</p>}
+      {warnings.length > 0 && <div role="status" aria-label="Diagram warnings">{warnings.map((warning, index) => <p key={`${index}-${warning}`}>{warning}</p>)}</div>}
+    </section>
   );
 }

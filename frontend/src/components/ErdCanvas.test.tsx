@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { ReactFlowInstance, ReactFlowProps } from '@xyflow/react';
@@ -7,7 +7,7 @@ import type { RelationshipFlowEdge, TableFlowNode } from '../graph/layout';
 import { ErdCanvas } from './ErdCanvas';
 import { App } from '../App';
 
-const { fitView, updateNodeInternals } = vi.hoisted(() => ({ fitView: vi.fn(async () => true), updateNodeInternals: vi.fn() }));
+const { fitView, updateNodeInternals, nodeMeasurement } = vi.hoisted(() => ({ fitView: vi.fn(async () => true), updateNodeInternals: vi.fn(), nodeMeasurement: { ready: true } }));
 
 // jsdom has no measurable viewport. Keep our custom nodes/edges and state real;
 // replace only the React Flow viewport boundary with an event adapter.
@@ -39,6 +39,7 @@ vi.mock('@xyflow/react', async (importOriginal) => {
     Background: () => null,
     Panel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     useUpdateNodeInternals: () => updateNodeInternals,
+    useNodesInitialized: () => nodeMeasurement.ready,
   };
 });
 
@@ -52,6 +53,63 @@ const graph: GraphResponse = {
 };
 
 describe('ERD canvas interactions', () => {
+  it('waits for measured nodes before fitting and does not refit when tables are restored', async () => {
+    fitView.mockClear();
+    nodeMeasurement.ready = false;
+    try {
+      const { rerender } = render(<ErdCanvas graph={graph} onSelectedTableChange={vi.fn()} />);
+      await screen.findByRole('button', { name: 'Select Orders' });
+      expect(fitView).not.toHaveBeenCalled();
+      nodeMeasurement.ready = true;
+      rerender(<ErdCanvas graph={graph} onSelectedTableChange={vi.fn()} />);
+      await waitFor(() => expect(fitView).toHaveBeenCalledWith({ padding: 0.15, duration: 350 }));
+      nodeMeasurement.ready = false;
+      rerender(<ErdCanvas graph={graph} onSelectedTableChange={vi.fn()} />);
+      nodeMeasurement.ready = true;
+      rerender(<ErdCanvas graph={graph} onSelectedTableChange={vi.fn()} />);
+      expect(fitView).toHaveBeenCalledOnce();
+    } finally { nodeMeasurement.ready = true; }
+  });
+
+  it('publishes display actions and hidden tables for the inspector without moving graph state', async () => {
+    const user = userEvent.setup();
+    const onDisplayStateChange = vi.fn();
+    render(<ErdCanvas graph={graph} onSelectedTableChange={vi.fn()} onDisplayStateChange={onDisplayStateChange} />);
+    await user.click(await screen.findByRole('button', { name: 'Hide Orders' }));
+    await waitFor(() => expect(onDisplayStateChange.mock.lastCall?.[0].hiddenTableIds.has('Orders')).toBe(true));
+    act(() => onDisplayStateChange.mock.lastCall?.[0].onRestoreTable('Orders'));
+    expect(await screen.findByRole('button', { name: 'Select Orders' })).toBeInTheDocument();
+    act(() => onDisplayStateChange.mock.lastCall?.[0].onCollapseAll());
+    expect(screen.getByRole('article', { name: 'Orders table, collapsed' })).toBeInTheDocument();
+    act(() => onDisplayStateChange.mock.lastCall?.[0].onExpandAll());
+    expect(screen.getByRole('article', { name: 'Orders table, expanded' })).toBeInTheDocument();
+  });
+
+  it('restores a hidden table from the mounted App inspector', async () => {
+    const user = userEvent.setup();
+    const service = { id: 'service', name: 'Service', fullyQualifiedName: 'Service' };
+    render(<App api={{ listServices: vi.fn(async () => [service]), listDatabases: vi.fn(async () => [service]), listSchemas: vi.fn(async () => [graph.schema]), getGraph: vi.fn(async () => graph) }} />);
+    const panel = screen.getByRole('complementary', { name: 'Diagram inspector' });
+    await user.selectOptions(await screen.findByRole('combobox', { name: 'Service' }), service.id);
+    await user.selectOptions(await screen.findByRole('combobox', { name: 'Database' }), service.id);
+    await user.selectOptions(await screen.findByRole('combobox', { name: 'Schema' }), graph.schema.id);
+    await user.click(await screen.findByRole('button', { name: 'Select Orders' }));
+    expect(screen.getByRole('complementary', { name: 'Selected table' })).toBe(panel);
+    await user.click(screen.getByRole('button', { name: 'Hide Orders' }));
+    await user.click(within(panel).getByRole('button', { name: 'Restore Orders' }));
+    expect(await screen.findByRole('button', { name: 'Select Orders' })).toBeInTheDocument();
+    expect(screen.getByRole('complementary', { name: 'Diagram inspector' })).toBe(panel);
+  });
+
+  it('fits the viewport without animation when reduced motion is requested', async () => {
+    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: true })));
+    fitView.mockClear();
+    try {
+      render(<ErdCanvas graph={graph} onSelectedTableChange={vi.fn()} />);
+      await waitFor(() => expect(fitView).toHaveBeenCalledWith({ padding: 0.15, duration: 0 }));
+    } finally { vi.unstubAllGlobals(); }
+  });
+
   it('selects, collapses, hides, and restores tables and incident relationships', async () => {
     const user = userEvent.setup();
     const onSelectedTableChange = vi.fn();
