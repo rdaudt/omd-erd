@@ -4,6 +4,13 @@ import { describe, expect, it, vi } from 'vitest';
 import type { CatalogApi } from './api/client';
 import type { CatalogItem, GraphResponse } from './api/types';
 import { App } from './App';
+import type { ErdCanvasProps } from './components/ErdCanvas';
+
+// Isolate App-owned selection from canvas effects so graph replacement is
+// verified even when an empty graph unmounts the canvas.
+vi.mock('./components/ErdCanvas', () => ({
+  ErdCanvas: ({ graph, onSelectedTableChange }: ErdCanvasProps) => <button onClick={() => onSelectedTableChange(graph.tables[0])}>Select first table</button>,
+}));
 
 const service: CatalogItem = { id: 'service', name: 'MSSQL Desktop', fullyQualifiedName: 'MSSQL Desktop' };
 const database: CatalogItem = { id: 'database', name: 'AdventureWorks2019', fullyQualifiedName: 'MSSQL Desktop.AdventureWorks2019' };
@@ -92,5 +99,33 @@ describe('App graph loading', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load Sales');
     expect(screen.getByText('Person diagram')).toBeInTheDocument();
+  });
+
+  it('clears the selected table when the same schema is refreshed with zero tables', async () => {
+    const user = userEvent.setup();
+    const table = { id: 'orders', name: 'Orders', fullyQualifiedName: 'Person.Orders', description: null, owner: null, tags: [], tier: null, columns: [] };
+    const initial = { ...graph(schemaOne), tables: [table] };
+    const initialApi = api(vi.fn(async () => initial));
+    const { rerender } = render(<App api={initialApi} />);
+    await selectSchema(user, schemaOne);
+    await user.click(await screen.findByRole('button', { name: 'Select first table' }));
+    expect(screen.getByRole('complementary', { name: 'Selected table' })).toHaveTextContent('Orders');
+
+    rerender(<App api={{ ...initialApi, getGraph: vi.fn(async () => graph(schemaOne)) }} />);
+    await screen.findByText('No tables in this schema.');
+    expect(screen.queryByRole('complementary', { name: 'Selected table' })).not.toBeInTheDocument();
+  });
+
+  it('refreshes the App selected table object when the same schema retains that table', async () => {
+    const user = userEvent.setup();
+    const table = { id: 'orders', name: 'Orders', fullyQualifiedName: 'Person.Orders', description: null, owner: null, tags: [], tier: null, columns: [] };
+    const initial = { ...graph(schemaOne), tables: [table] };
+    const initialApi = api(vi.fn(async () => initial));
+    const { rerender } = render(<App api={initialApi} />);
+    await selectSchema(user, schemaOne);
+    await user.click(await screen.findByRole('button', { name: 'Select first table' }));
+    const updated = { ...table, name: 'Orders updated', description: 'Current description' };
+    rerender(<App api={{ ...initialApi, getGraph: vi.fn(async () => ({ ...initial, tables: [updated] })) }} />);
+    expect(await screen.findByRole('heading', { name: 'Orders updated' })).toBeInTheDocument();
   });
 });

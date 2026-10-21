@@ -18,6 +18,10 @@ export function App({ api = catalogApi }: AppProps) {
   useEffect(() => { setSelectedTable(null); }, [graph?.schema.id]);
 
   useEffect(() => {
+    setSelectedTable((previous) => graph?.tables.find((table) => table.id === previous?.id) ?? null);
+  }, [graph]);
+
+  useEffect(() => {
     if (!schemaId) {
       setLoading(false);
       setError(null);
