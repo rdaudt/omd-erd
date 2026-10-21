@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=78.1.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "omd-erd-backend"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "fastapi>=0.115,<1",
+  "pydantic-settings>=2.10,<3",
+  "uvicorn[standard]>=0.34,<1",
+  "openmetadata-ingestion==2.0.5.1",
+]
+
+[project.optional-dependencies]
+test = ["httpx>=0.28,<1", "pytest>=9,<10", "pytest-cov>=6,<8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
