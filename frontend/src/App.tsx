@@ -84,7 +84,7 @@ export function App({ api = catalogApi }: AppProps) {
         </div>
         <CatalogSelector api={api} onSelectionChange={setSelection} />
       </header>
-      <StatusBanner loading={loading} error={error} source={graph?.source ?? null} warnings={graph?.warnings ?? []} />
+      <StatusBanner loading={loading} error={error} source={graph?.source ?? null} notices={graph?.notices ?? []} warnings={graph?.warnings ?? []} />
       <main className="app-content">
         <section className="diagram-shell" aria-label="Diagram">
           {graph ? (

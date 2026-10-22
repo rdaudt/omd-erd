@@ -12,6 +12,7 @@
   --accent: #b29aff;
   --accent-soft: #34304c;
   --warning: #f1cd80;
+  --notice: #c9c6dc;
   --sample: #b9d8f4;
   --danger: #ffb4b4;
   --edge-color: #a69cc7;
@@ -134,6 +135,7 @@ p { line-height: 1.55; }
 .status-banner { flex-shrink: 0; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); padding: 9px var(--space-5); background: #282419; border-bottom: 1px solid #685b35; color: var(--warning); font-size: 13px; }
 .status-banner p { max-width: 100%; overflow-wrap: anywhere; }
 .status-banner .sample-status { color: var(--sample); }
+.status-banner .notice-status { color: var(--notice); }
 .status-banner .loading-status { color: var(--text); }
 @keyframes content-in { from { opacity: .45; } to { opacity: 1; } }
 @media (max-width: 1200px) {

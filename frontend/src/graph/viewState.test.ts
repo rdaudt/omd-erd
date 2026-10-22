@@ -4,7 +4,7 @@ import { relatedIds, resetViewState, visibleGraph } from './viewState';
 
 const table = (id: string): TableModel => ({ id, name: id, fullyQualifiedName: id, entityType: 'table', description: null, owner: null, tags: [], tier: null, columns: [] });
 const graph: GraphResponse = {
-  source: 'live', schema: { id: 'schema', name: 'schema', fullyQualifiedName: 'schema' }, warnings: [],
+  source: 'live', schema: { id: 'schema', name: 'schema', fullyQualifiedName: 'schema' }, notices: [], warnings: [],
   tables: ['a', 'b', 'c', 'd'].map(table),
   relationships: [
     { id: 'ab', sourceTableId: 'a', sourceColumn: 'id', targetTableId: 'b', targetColumn: 'id' },

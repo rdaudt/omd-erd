@@ -5,7 +5,7 @@ const service = { id: 'svc-1', name: 'Demo SQL', fullyQualifiedName: 'Demo SQL' 
 const database = { id: 'db-1', name: 'Commerce', fullyQualifiedName: 'Demo SQL.Commerce' };
 const schema = { id: 'schema-1', name: 'Sales', fullyQualifiedName: 'Demo SQL.Commerce.Sales' };
 const graph: GraphResponse = {
-  source: 'live', schema, warnings: [],
+  source: 'live', schema, notices: [], warnings: [],
   tables: [
     {
       id: 'customer', name: 'Customer', fullyQualifiedName: `${schema.fullyQualifiedName}.Customer`, entityType: 'table',

@@ -15,6 +15,7 @@ const graph: GraphResponse = {
     { id: 'orders-customers', sourceTableId: 'orders', sourceColumn: 'customer_id', targetTableId: 'customers', targetColumn: 'id' },
     { id: 'summary-orders', sourceTableId: 'order-summary', sourceColumn: 'order_id', targetTableId: 'orders', targetColumn: 'id' },
   ],
+  notices: [],
   warnings: [],
 };
 

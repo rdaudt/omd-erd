@@ -26,7 +26,7 @@ const schemaOne: CatalogItem = { id: 'one', name: 'Person', fullyQualifiedName: 
 const schemaTwo: CatalogItem = { id: 'two', name: 'Sales', fullyQualifiedName: 'MSSQL Desktop.AdventureWorks2019.Sales' };
 
 function graph(schema: CatalogItem, source: 'live' | 'sample' = 'live'): GraphResponse {
-  return { source, schema, tables: [], relationships: [], warnings: [] };
+  return { source, schema, tables: [], relationships: [], notices: [], warnings: [] };
 }
 
 function api(getGraph: CatalogApi['getGraph']): CatalogApi {

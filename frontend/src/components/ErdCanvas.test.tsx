@@ -53,7 +53,7 @@ vi.mock('@xyflow/react', async (importOriginal) => {
 });
 
 const graph: GraphResponse = {
-  source: 'live', schema: { id: 'one', name: 'Sales', fullyQualifiedName: 'Sales' }, warnings: [],
+  source: 'live', schema: { id: 'one', name: 'Sales', fullyQualifiedName: 'Sales' }, notices: [], warnings: [],
   tables: ['Orders', 'Customer'].map((name) => ({
     id: name, name, fullyQualifiedName: name, entityType: 'table', description: null, owner: null, tags: [], tier: null,
     columns: [{ name: name === 'Orders' ? 'customer_id' : 'id', dataType: 'INT', nullable: false, primaryKey: name === 'Customer', foreignKey: name === 'Orders', description: null }],

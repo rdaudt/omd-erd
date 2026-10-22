@@ -5,7 +5,7 @@ import type { GraphResponse } from '../api/types';
 import { InspectorPanel, type InspectorPanelProps } from './InspectorPanel';
 
 const graph: GraphResponse = {
-  source: 'live', schema: { id: 'sales', name: 'Sales', fullyQualifiedName: 'Warehouse.Sales' }, warnings: [],
+  source: 'live', schema: { id: 'sales', name: 'Sales', fullyQualifiedName: 'Warehouse.Sales' }, notices: [], warnings: [],
   tables: [
     { id: 'orders', name: 'Orders', fullyQualifiedName: 'Sales.Orders', entityType: 'table', description: 'Customer purchases', owner: 'Commerce team', tier: 'Tier1', tags: ['PII.Sensitive', 'Domain.Commerce'], columns: [
       { name: 'id', dataType: 'BIGINT', nullable: false, primaryKey: true, foreignKey: false, description: 'Order identifier' },

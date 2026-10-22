@@ -41,5 +41,6 @@ export type GraphResponse = {
   schema: CatalogItem;
   tables: TableModel[];
   relationships: RelationshipModel[];
+  notices: string[];
   warnings: string[];
 };
