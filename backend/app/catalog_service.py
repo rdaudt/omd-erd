@@ -9,6 +9,7 @@ from metadata.generated.schema.entity.data.table import Table
 from metadata.generated.schema.entity.services.databaseService import DatabaseService
 from metadata.ingestion.ometa.client import APIError, HtmlResponseError, RestTransportError, RetryException
 from metadata.ingestion.ometa.utils import model_str
+from metadata.utils.fqn import split as split_fqn, unquote_name
 from requests.exceptions import ConnectionError as RequestsConnectionError, Timeout as RequestsTimeout
 
 from app.models import CatalogItem, ColumnModel, GraphResponse, RelationshipModel, TableModel
@@ -76,17 +77,14 @@ def _display_tags(table) -> tuple[list[str], str | None]:
     return [label for label in labels if label != tier], tier.removeprefix("Tier.") if tier else None
 
 def _column_name_from_reference(target_fqn: str, reference: str) -> str | None:
-    prefix = f"{target_fqn}."
-    if not reference.startswith(prefix):
+    try:
+        target_parts = split_fqn(target_fqn)
+        reference_parts = split_fqn(reference)
+    except Exception:
         return None
-    suffix = reference[len(prefix):]
-    if suffix.startswith('"') and suffix.endswith('"') and len(suffix) >= 2:
-        suffix = suffix[1:-1].replace('""', '"')
-    else:
-        if "." in suffix:
-            return None
-        suffix = suffix.replace(r"\.", ".").replace(r"\\", "\\")
-    return suffix or None
+    if len(reference_parts) != len(target_parts) + 1 or reference_parts[:-1] != target_parts:
+        return None
+    return unquote_name(reference_parts[-1]) or None
 
 
 def _map_relationships(tables: list[object], warnings: list[str]) -> list[RelationshipModel]:

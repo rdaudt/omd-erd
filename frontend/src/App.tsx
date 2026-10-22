@@ -17,6 +17,7 @@ const emptyDisplayState: CanvasDisplayState = {
 export function App({ api = catalogApi }: AppProps) {
   const [selection, setSelection] = useState<CatalogSelection>({ service: null, database: null, schema: null });
   const [graph, setGraph] = useState<GraphResponse | null>(null);
+  const [loadedSchemaId, setLoadedSchemaId] = useState<string | null>(null);
   const [selectedTable, setSelectedTable] = useState<TableModel | null>(null);
   const [displayState, setDisplayState] = useState<CanvasDisplayState | null>(null);
   const [loading, setLoading] = useState(false);
@@ -25,18 +26,13 @@ export function App({ api = catalogApi }: AppProps) {
   const inspectedTable = graph?.tables.find((table) => table.id === selectedTable?.id) ?? null;
 
   useEffect(() => {
-    setGraph(null);
-    setSelectedTable(null);
-    setDisplayState(null);
-  }, [schemaId]);
-
-  useEffect(() => {
     setSelectedTable((previous) => graph?.tables.find((table) => table.id === previous?.id) ?? null);
   }, [graph]);
 
   useEffect(() => {
     if (!schemaId) {
       setGraph(null);
+      setLoadedSchemaId(null);
       setSelectedTable(null);
       setDisplayState(null);
       setLoading(false);
@@ -49,7 +45,12 @@ export function App({ api = catalogApi }: AppProps) {
     setError(null);
     api.getGraph(schemaId, false, request.signal)
       .then((result) => {
-        if (!request.signal.aborted) setGraph(result);
+        if (!request.signal.aborted) {
+          setSelectedTable(null);
+          setDisplayState(null);
+          setGraph(result);
+          setLoadedSchemaId(schemaId);
+        }
       })
       .catch((cause: unknown) => {
         if (!request.signal.aborted) setError(cause instanceof Error ? cause.message : 'Unable to load diagram');
@@ -78,7 +79,7 @@ export function App({ api = catalogApi }: AppProps) {
               <div className="diagram-heading"><h2>{graph.schema.name} diagram</h2>
                 <p>{graph.tables.length} tables · {graph.relationships.length} relationships</p></div>
               {graph.tables.length === 0 && <div className="empty-state"><p>No tables in this schema.</p></div>}
-              {graph.tables.length > 0 && <ErdCanvas key={schemaId ?? graph.schema.id} graph={graph} onSelectedTableChange={setSelectedTable} onDisplayStateChange={setDisplayState} />}
+              {graph.tables.length > 0 && <ErdCanvas key={loadedSchemaId ?? graph.schema.id} graph={graph} onSelectedTableChange={setSelectedTable} onDisplayStateChange={setDisplayState} />}
             </>
           ) : (
             <div className="empty-state"><p className="eyebrow">Explore your catalog</p><h2>Every relationship, in view.</h2><p>Select a service, database, and schema to view its diagram.</p></div>
