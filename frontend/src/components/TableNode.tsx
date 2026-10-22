@@ -13,6 +13,7 @@ export function TableNode({ id, data, selected }: NodeProps<TableFlowNode>) {
       style={{ width: TABLE_WIDTH }}>
       <div className="table-node-header" style={{ height: HEADER_HEIGHT }}>
         <button className="nodrag table-name" aria-label={`Select ${table.name}`} aria-pressed={selected} onClick={(event) => { event.stopPropagation(); onSelect?.(id); }} title={table.fullyQualifiedName}>{table.name}</button>
+        {collapsed && <span className="table-count">{table.columns.length} cols</span>}
         <button className="nodrag table-action" aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${table.name}`} aria-expanded={!collapsed} onClick={(event) => { event.stopPropagation(); onToggleCollapsed?.(id); }}>{collapsed ? '+' : '−'}</button>
         <button className="nodrag table-action" aria-label={`Hide ${table.name}`} onClick={(event) => { event.stopPropagation(); onHide?.(id); }}>×</button>
       </div>

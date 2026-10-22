@@ -24,7 +24,11 @@ export function App({ api = catalogApi }: AppProps) {
   const schemaId = selection.schema?.id;
   const inspectedTable = graph?.tables.find((table) => table.id === selectedTable?.id) ?? null;
 
-  useEffect(() => { setSelectedTable(null); }, [graph?.schema.id]);
+  useEffect(() => {
+    setGraph(null);
+    setSelectedTable(null);
+    setDisplayState(null);
+  }, [schemaId]);
 
   useEffect(() => {
     setSelectedTable((previous) => graph?.tables.find((table) => table.id === previous?.id) ?? null);
@@ -74,7 +78,7 @@ export function App({ api = catalogApi }: AppProps) {
               <div className="diagram-heading"><h2>{graph.schema.name} diagram</h2>
                 <p>{graph.tables.length} tables · {graph.relationships.length} relationships</p></div>
               {graph.tables.length === 0 && <div className="empty-state"><p>No tables in this schema.</p></div>}
-              {graph.tables.length > 0 && <ErdCanvas graph={graph} onSelectedTableChange={setSelectedTable} onDisplayStateChange={setDisplayState} />}
+              {graph.tables.length > 0 && <ErdCanvas key={schemaId ?? graph.schema.id} graph={graph} onSelectedTableChange={setSelectedTable} onDisplayStateChange={setDisplayState} />}
             </>
           ) : (
             <div className="empty-state"><p className="eyebrow">Explore your catalog</p><h2>Every relationship, in view.</h2><p>Select a service, database, and schema to view its diagram.</p></div>

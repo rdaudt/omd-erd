@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import logging
 from pathlib import Path
 from time import monotonic
 
@@ -12,6 +13,8 @@ from requests.exceptions import ConnectionError as RequestsConnectionError, Time
 
 from app.models import CatalogItem, ColumnModel, GraphResponse, RelationshipModel, TableModel
 from app.openmetadata_client import OpenMetadataReader
+
+logger = logging.getLogger(__name__)
 
 
 class CatalogNotFoundError(Exception):
@@ -72,6 +75,19 @@ def _display_tags(table) -> tuple[list[str], str | None]:
     tier = next((label for label in labels if label.startswith("Tier.")), None)
     return [label for label in labels if label != tier], tier.removeprefix("Tier.") if tier else None
 
+def _column_name_from_reference(target_fqn: str, reference: str) -> str | None:
+    prefix = f"{target_fqn}."
+    if not reference.startswith(prefix):
+        return None
+    suffix = reference[len(prefix):]
+    if suffix.startswith('"') and suffix.endswith('"') and len(suffix) >= 2:
+        suffix = suffix[1:-1].replace('""', '"')
+    else:
+        if "." in suffix:
+            return None
+        suffix = suffix.replace(r"\.", ".").replace(r"\\", "\\")
+    return suffix or None
+
 
 def _map_relationships(tables: list[object], warnings: list[str]) -> list[RelationshipModel]:
     by_fqn = {_text(table.fullyQualifiedName): table for table in tables}
@@ -90,7 +106,7 @@ def _map_relationships(tables: list[object], warnings: list[str]) -> list[Relati
             for source_column, reference in zip(local, referred):
                 target_fqn = next((fqn for fqn in ordered_fqns if reference and reference.startswith(fqn + ".")), None)
                 target_table = by_fqn[target_fqn] if target_fqn else None
-                target_column = reference[len(target_fqn) + 1:].rsplit(".", 1)[-1] if target_fqn else None
+                target_column = _column_name_from_reference(target_fqn, reference) if target_fqn and reference else None
                 target_columns = {_text(column.name) for column in target_table.columns or []} if target_table else set()
                 if not source_column or source_column not in source_columns or not target_table or not target_column or target_column not in target_columns:
                     warnings.append(f"Unresolved foreign key on {_text(table.name)}: {source_column} -> {reference}")
@@ -179,7 +195,8 @@ class CatalogService:
                 params={"databaseSchema": model_str(schema.fullyQualifiedName)},
             )
         except (RequestsConnectionError, RequestsTimeout, TimeoutError, ConnectionError,
-                RestTransportError, RetryException, HtmlResponseError, APIError):
+                RestTransportError, RetryException, HtmlResponseError, APIError) as exc:
+            logger.warning("OpenMetadata graph request failed; using sample graph (%s)", type(exc).__name__)
             return GraphResponse.model_validate_json(Path(__file__).with_name("sample_graph.json").read_text(encoding="utf-8"))
 
         warnings: list[str] = []

@@ -87,6 +87,7 @@ p { line-height: 1.55; }
 .table-node[aria-label$="collapsed"] .table-node-header { border-radius: 7px; }
 .table-node button { padding: 4px; min-height: 28px; border-color: transparent; background: transparent; }
 .table-node .table-name { flex: 1; min-width: 0; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 650; }
+.table-count { color: var(--text-muted); font-size: 10px; white-space: nowrap; }
 .table-action { width: 26px; font-size: 18px; line-height: 1; }
 .table-column { display: flex; align-items: center; gap: 5px; padding: 0 8px; font-size: 12px; border-top: 1px solid #ffffff08; }
 .column-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

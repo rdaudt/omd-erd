@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Path, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -8,6 +8,8 @@ from app.catalog_service import CatalogNotFoundError, CatalogService
 from app.config import get_settings
 from app.models import CatalogItem, GraphResponse
 from app.openmetadata_client import OpenMetadataReader
+
+_SAFE_ENTITY_ID = r"^[A-Za-z0-9_-]{1,128}$"
 
 
 class CatalogServiceProtocol(Protocol):
@@ -54,15 +56,18 @@ def create_app(catalog_service: CatalogServiceProtocol | None = None) -> FastAPI
         return get_catalog_service().list_services()
 
     @app.get("/api/databases", response_model=list[CatalogItem])
-    def list_databases(serviceId: str) -> list[CatalogItem]:
+    def list_databases(serviceId: str = Query(pattern=_SAFE_ENTITY_ID)) -> list[CatalogItem]:
         return get_catalog_service().list_databases(serviceId)
 
     @app.get("/api/schemas", response_model=list[CatalogItem])
-    def list_schemas(databaseId: str) -> list[CatalogItem]:
+    def list_schemas(databaseId: str = Query(pattern=_SAFE_ENTITY_ID)) -> list[CatalogItem]:
         return get_catalog_service().list_schemas(databaseId)
 
     @app.get("/api/schemas/{schema_id}/graph", response_model=GraphResponse, response_model_by_alias=True)
-    def get_graph(schema_id: str, refresh: bool = False) -> GraphResponse:
+    def get_graph(
+        schema_id: str = Path(pattern=_SAFE_ENTITY_ID),
+        refresh: bool = False,
+    ) -> GraphResponse:
         return get_catalog_service().get_schema_graph(schema_id, refresh=refresh)
 
     return app
