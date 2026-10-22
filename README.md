@@ -9,7 +9,6 @@ A local, read-only schema explorer for OpenMetadata 2.0.5. Select a database ser
 - Node.js **24 LTS** with npm (verified with Node 24.18.0).
 - Docker Desktop and the existing OpenMetadata **2.0.5** compose stack, with catalog metadata ingested and a bot JWT allowed to read it.
 - Free loopback ports **8000** and **5173**. OpenMetadata normally uses **8585**.
-- `rtk` for the command examples below; it wraps commands without changing their behavior. `rtk proxy` is useful for Windows executables such as `npm.cmd`.
 
 Run commands from this repository's application root. The existing Docker stack may live in a different checkout or directory.
 
@@ -18,13 +17,13 @@ Run commands from this repository's application root. The existing Docker stack 
 Create the exact Python environment and install the adapter in editable mode:
 
 ```powershell
-rtk proxy py -3.12 -m venv .venv
-rtk proxy .venv\Scripts\python.exe --version
+py -3.12 -m venv .venv
+.venv\Scripts\python.exe --version
 # Confirm Python 3.12.10 before continuing.
-rtk proxy .venv\Scripts\python.exe -m pip install -e "./backend[test]"
-rtk proxy npm.cmd ci --prefix frontend
-rtk proxy npx.cmd --prefix frontend playwright install chromium
-rtk proxy powershell -NoProfile -Command "Copy-Item -LiteralPath .env.example -Destination .env"
+.venv\Scripts\python.exe -m pip install -e "./backend[test]"
+npm.cmd ci --prefix frontend
+npx.cmd --prefix frontend playwright install chromium
+Copy-Item -LiteralPath .env.example -Destination .env
 ```
 
 Edit the ignored `.env` file locally. Use the values below, replacing only the bot JWT and, if necessary, the OpenMetadata API URL:
@@ -41,8 +40,8 @@ Keep the JWT in `.env` or the backend process environment. Never put it in a `VI
 Start the **existing** OpenMetadata stack from the directory that contains its Compose file:
 
 ```powershell
-rtk proxy docker compose -f docker-compose-postgres.yml up -d
-rtk proxy docker compose -f docker-compose-postgres.yml ps
+docker compose -f docker-compose-postgres.yml up -d
+docker compose -f docker-compose-postgres.yml ps
 ```
 
 Wait for the OpenMetadata server and its dependencies to be healthy. The catalog UI is at `http://localhost:8585`. This application does not ingest or create demo catalog entities.
@@ -52,7 +51,7 @@ Wait for the OpenMetadata server and its dependencies to be healthy. The catalog
 From the application root:
 
 ```powershell
-rtk proxy powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev.ps1
 ```
 
 Open **http://127.0.0.1:5173**. The script checks the environment, dependencies, API URL, and port availability; starts Uvicorn on `127.0.0.1:8000` and Vite on `127.0.0.1:5173`; and writes local logs under ignored `.dev-logs/`. Cold backend startup can take a minute while the OpenMetadata SDK imports. Press **Ctrl+C in the launching terminal** to stop both owned process trees. If either server exits, the script stops the other in `finally`. Close the servers before running E2E tests because Playwright owns port 5173.
@@ -61,10 +60,10 @@ For separate terminals, activate the environment in each backend terminal or let
 
 ```powershell
 # Terminal 1, application root
-rtk proxy .venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000
+.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000
 
 # Terminal 2, application root
-rtk proxy npm.cmd run dev --prefix frontend -- --host 127.0.0.1 --port 5173 --strictPort
+npm.cmd run dev --prefix frontend -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
 Vite proxies `/api` to the local adapter. The browser never receives the OpenMetadata JWT or calls OpenMetadata directly.
@@ -101,29 +100,29 @@ The deterministic E2E test intercepts exactly the adapter's four routes with fix
 Use the project virtual environment for backend checks:
 
 ```powershell
-rtk proxy .venv\Scripts\python.exe -m pytest backend/tests -v
-rtk proxy .venv\Scripts\python.exe -m pip check
-rtk proxy npm.cmd run test:run --prefix frontend
-rtk proxy npm.cmd exec --prefix frontend tsc -- --noEmit --project frontend/tsconfig.json
-rtk proxy npm.cmd run build --prefix frontend
-rtk proxy npm.cmd run test:e2e --prefix frontend
+.venv\Scripts\python.exe -m pytest backend/tests -v
+.venv\Scripts\python.exe -m pip check
+npm.cmd run test:run --prefix frontend
+npm.cmd exec --prefix frontend tsc -- --noEmit --project frontend/tsconfig.json
+npm.cmd run build --prefix frontend
+npm.cmd run test:e2e --prefix frontend
 ```
 
-The browser test starts and stops its own Vite server, uses Chromium, and covers catalog cascading, table/view filtering, a real entity drag, collapse/expand, hidden-edge removal and restoration, zoom/fit/relayout, theme persistence, rich metadata, relationship notices, ephemeral refresh state, read-only requests, and sample labeling. Failure screenshots and traces are ignored under `frontend/test-results/`; inspect a trace with `rtk proxy npx.cmd --prefix frontend playwright show-trace <trace.zip>`.
+The browser test starts and stops its own Vite server, uses Chromium, and covers catalog cascading, table/view filtering, a real entity drag, collapse/expand, hidden-edge removal and restoration, zoom/fit/relayout, theme persistence, rich metadata, relationship notices, ephemeral refresh state, read-only requests, and sample labeling. Failure screenshots and traces are ignored under `frontend/test-results/`; inspect a trace with `npx.cmd --prefix frontend playwright show-trace <trace.zip>`.
 
 If port 5173 is occupied by a development server you need to keep running, select another free port for the browser test in that PowerShell session:
 
 ```powershell
 $env:PLAYWRIGHT_PORT = 5174
-rtk proxy npm.cmd run test:e2e --prefix frontend
+npm.cmd run test:e2e --prefix frontend
 Remove-Item Env:PLAYWRIGHT_PORT
 ```
 
 For live verification, use the actual Docker catalog, confirm the neutral live status, check the expected declared edges against the source constraints, exercise every canvas control, inspect metadata, and verify refresh reset. The app has no catalog write route. Check the worktree before committing and scan tracked files without printing any matching secret values:
 
 ```powershell
-rtk git status --short
-rtk git grep -l -E "eyJ[a-zA-Z0-9_-]+\\.eyJ" -- .
+git status --short
+git grep -l -E "eyJ[a-zA-Z0-9_-]+\\.eyJ" -- .
 ```
 
 ## Architecture and boundaries
