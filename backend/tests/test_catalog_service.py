@@ -10,10 +10,12 @@ from conftest import Page, entity
 from types import SimpleNamespace
 
 
-def graph_column(name: str, data_type=DataType.INT):
+def graph_column(name: str, data_type=DataType.INT, *, data_type_display=None, tags=None):
     return SimpleNamespace(
         name=SimpleNamespace(root=name),
         dataType=data_type,
+        dataTypeDisplay=data_type_display,
+        tags=tags or [],
         constraint=None,
         description=None,
     )
@@ -75,6 +77,20 @@ def test_graph_normalizes_sdk_shaped_tables_and_foreign_keys(fake_reader):
     assert fake_reader.calls[0].fields == []
     assert fake_reader.calls[1].fields == ["columns", "tableConstraints", "owners", "tags", "tableType"]
     assert fake_reader.calls[1].params == {"databaseSchema": "svc.db.dbo", "limit": 100}
+
+def test_graph_preserves_source_column_type_display_and_tags(fake_reader):
+    column = graph_column(
+        "display_name",
+        DataType.VARCHAR,
+        data_type_display="nvarchar(60)",
+        tags=[SimpleNamespace(tagFQN=SimpleNamespace(root="PII.Sensitive"))],
+    )
+    add_graph_schema(fake_reader, [graph_table("customer", "customer", "svc.db.dbo.customer", [column])])
+
+    mapped = CatalogService(fake_reader, cache_ttl_seconds=60).get_schema_graph("schema-1").tables[0].columns[0]
+
+    assert mapped.dataType == "nvarchar(60)"
+    assert mapped.tags == ["PII.Sensitive"]
 
 @pytest.mark.parametrize("table_type", ["View", "SecureView", "MaterializedView"])
 def test_graph_classifies_openmetadata_view_types(fake_reader, table_type):

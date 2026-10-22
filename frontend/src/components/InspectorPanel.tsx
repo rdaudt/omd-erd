@@ -61,6 +61,7 @@ export function InspectorPanel({ graph, selectedTable, displayMode, onDisplayMod
               {column.foreignKey && <span className="key-badge foreign-key" role="img" aria-label="Foreign key">FK</span>}
             </div>
             <div className="column-detail-type"><span>{column.dataType}</span><span>{column.nullable ? 'NULL' : 'NOT NULL'}</span></div>
+            {column.tags?.length ? <ul className="tag-list column-tag-list" aria-label={`${column.name} tags`}>{column.tags.map((tag) => <li key={tag}>{tag}</li>)}</ul> : null}
             <p className="muted">{assigned(column.description)}</p>
           </li>)}</ul> : <p className="muted">No columns</p>}
         </section>

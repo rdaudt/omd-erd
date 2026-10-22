@@ -61,7 +61,8 @@ def _map_column(column, primary_keys: set[str], foreign_keys: set[str]) -> Colum
     is_primary_key = name in primary_keys or constraint == "PRIMARY_KEY"
     return ColumnModel(
         name=name,
-        dataType=_text(column.dataType) or "UNKNOWN",
+        dataType=_text(getattr(column, "dataTypeDisplay", None)) or _text(column.dataType) or "UNKNOWN",
+        tags=sorted(filter(None, (_text(tag.tagFQN) for tag in (getattr(column, "tags", None) or [])))),
         nullable=not is_primary_key and constraint != "NOT_NULL",
         primaryKey=is_primary_key,
         foreignKey=name in foreign_keys,

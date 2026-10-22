@@ -23,6 +23,7 @@ export function TableNode({ id, data, selected }: NodeProps<TableFlowNode>) {
         {table.columns.map((column) => <div className="table-column" role="listitem" key={column.name} style={{ height: COLUMN_HEIGHT }}>
           {column.primaryKey && <span className="key-badge" role="img" aria-label="Primary key" title="Primary key">PK</span>}
           {column.foreignKey && <span className="key-badge foreign-key" role="img" aria-label="Foreign key" title="Foreign key">FK</span>}
+          {column.tags?.length ? <span className="column-tags" role="img" aria-label={`Column tags: ${column.tags.join(', ')}`} title={column.tags.join(', ')}>#</span> : null}
           <span className="column-name" title={column.name}>{column.name}</span>
           <span className="column-type" title={column.dataType}>{column.dataType}</span><span className="column-nullability">{column.nullable ? 'NULL' : 'NOT NULL'}</span>
         </div>)}

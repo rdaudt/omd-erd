@@ -12,6 +12,7 @@ class CatalogItem(BaseModel):
 class ColumnModel(BaseModel):
     name: str
     dataType: str
+    tags: list[str] = Field(default_factory=list)
     nullable: bool
     primaryKey: bool = False
     foreignKey: bool = False

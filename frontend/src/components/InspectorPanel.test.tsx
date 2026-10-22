@@ -8,8 +8,8 @@ const graph: GraphResponse = {
   source: 'live', schema: { id: 'sales', name: 'Sales', fullyQualifiedName: 'Warehouse.Sales' }, notices: [], warnings: [],
   tables: [
     { id: 'orders', name: 'Orders', fullyQualifiedName: 'Sales.Orders', entityType: 'table', description: 'Customer purchases', owner: 'Commerce team', tier: 'Tier1', tags: ['PII.Sensitive', 'Domain.Commerce'], columns: [
-      { name: 'id', dataType: 'BIGINT', nullable: false, primaryKey: true, foreignKey: false, description: 'Order identifier' },
-      { name: 'customer_id', dataType: 'INT', nullable: true, primaryKey: false, foreignKey: true, description: null },
+      { name: 'id', dataType: 'BIGINT', tags: [], nullable: false, primaryKey: true, foreignKey: false, description: 'Order identifier' },
+      { name: 'customer_id', dataType: 'nvarchar(60)', tags: ['PII.Sensitive'], nullable: true, primaryKey: false, foreignKey: true, description: null },
     ] },
     { id: 'customers', name: 'Customers', fullyQualifiedName: 'Sales.Customers', entityType: 'table', description: null, owner: null, tier: null, tags: [], columns: [] },
     { id: 'lines', name: 'OrderLines', fullyQualifiedName: 'Sales.OrderLines', entityType: 'table', description: null, owner: null, tier: null, tags: [], columns: [] },
@@ -61,9 +61,10 @@ describe('InspectorPanel', () => {
     render(<InspectorPanel {...props({ selectedTable: graph.tables[0] })} />);
     const panel = screen.getByRole('complementary', { name: 'Selected table' });
     expect(within(panel).getByRole('heading', { name: 'Orders' })).toBeInTheDocument();
-    for (const value of ['Sales.Orders', 'Customer purchases', 'Commerce team', 'Tier1', 'PII.Sensitive', 'Domain.Commerce', 'Order identifier', 'BIGINT', 'INT', 'NULL', 'NOT NULL']) {
+    for (const value of ['Sales.Orders', 'Customer purchases', 'Commerce team', 'Tier1', 'Domain.Commerce', 'Order identifier', 'BIGINT', 'nvarchar(60)', 'NULL', 'NOT NULL']) {
       expect(within(panel).getByText(value)).toBeInTheDocument();
     }
+    expect(within(panel).getAllByText('PII.Sensitive')).toHaveLength(2);
     expect(within(panel).getByLabelText('Primary key')).toBeInTheDocument();
     expect(within(panel).getByLabelText('Foreign key')).toBeInTheDocument();
     expect(within(panel).getByRole('region', { name: 'Incoming references' })).toHaveTextContent('OrderLines.order_id → Orders.id');

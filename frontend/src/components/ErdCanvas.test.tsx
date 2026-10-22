@@ -56,7 +56,7 @@ const graph: GraphResponse = {
   source: 'live', schema: { id: 'one', name: 'Sales', fullyQualifiedName: 'Sales' }, notices: [], warnings: [],
   tables: ['Orders', 'Customer'].map((name) => ({
     id: name, name, fullyQualifiedName: name, entityType: 'table', description: null, owner: null, tags: [], tier: null,
-    columns: [{ name: name === 'Orders' ? 'customer_id' : 'id', dataType: 'INT', nullable: false, primaryKey: name === 'Customer', foreignKey: name === 'Orders', description: null }],
+    columns: [{ name: name === 'Orders' ? 'customer_id' : 'id', dataType: name === 'Orders' ? 'nvarchar(60)' : 'INT', tags: name === 'Orders' ? ['PII.Sensitive'] : [], nullable: false, primaryKey: name === 'Customer', foreignKey: name === 'Orders', description: null }],
   })),
   relationships: [{ id: 'fk', sourceTableId: 'Orders', sourceColumn: 'customer_id', targetTableId: 'Customer', targetColumn: 'id' }],
 };
@@ -67,6 +67,12 @@ describe('ERD canvas interactions', () => {
     render(<ErdCanvas graph={{ ...graph, tables: [view], relationships: [] }} onSelectedTableChange={vi.fn()} />);
     expect(await screen.findByRole('article', { name: 'Summary view, expanded' })).toBeInTheDocument();
     expect(screen.getByText('VIEW')).toBeInTheDocument();
+  });
+
+  it('shows source column type details and column tags on entity nodes', async () => {
+    render(<ErdCanvas graph={graph} onSelectedTableChange={vi.fn()} />);
+    expect(await screen.findByText('nvarchar(60)')).toBeInTheDocument();
+    expect(screen.getByLabelText('Column tags: PII.Sensitive')).toBeInTheDocument();
   });
 
   it('waits for measured nodes before fitting and does not refit when tables are restored', async () => {

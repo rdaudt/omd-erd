@@ -7,6 +7,7 @@ export type CatalogItem = {
 export type ColumnModel = {
   name: string;
   dataType: string;
+  tags?: string[];
   nullable: boolean;
   primaryKey: boolean;
   foreignKey: boolean;
