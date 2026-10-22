@@ -1,6 +1,6 @@
 # OpenMetadata ERD Viewer
 
-A local, read-only schema explorer for OpenMetadata 2.0.5. Select a database service, database, and schema to explore declared foreign keys on a midnight React Flow canvas. The inspector shows descriptions, owners, tags, tiers, columns, and incoming/outgoing references.
+A local, read-only schema explorer for OpenMetadata 2.0.5. Select a database service, database, and schema to explore tables, views, and declared foreign keys on a React Flow canvas. Filter the diagram to tables, views, or both; inspect descriptions, owners, tags, tiers, columns, and incoming/outgoing references; and switch between system, light, and dark themes.
 
 ## Prerequisites
 
@@ -38,7 +38,7 @@ OMD_CACHE_TTL_SECONDS=60
 
 Keep the JWT in `.env` or the backend process environment. Never put it in a `VITE_*` variable, source file, URL, screenshot, or commit. Process environment values take precedence over `.env`. The startup script reads these four settings without executing their contents; use simple unquoted or fully quoted values without inline comments.
 
-Start the **existing** OpenMetadata stack from its compose directory (for this laptop, `D:\Docker\openmetadata`):
+Start the **existing** OpenMetadata stack from the directory that contains its Compose file:
 
 ```powershell
 rtk proxy docker compose -f docker-compose-postgres.yml up -d
@@ -71,14 +71,15 @@ Vite proxies `/api` to the local adapter. The browser never receives the OpenMet
 
 ## Using the viewer
 
-1. Choose **Database service → Database → Schema**. Use a schema with **up to 50 tables** for the supported demo boundary. Larger schemas have no readability or performance guarantee; they are not truncated silently.
-2. Wait for **Laying out diagram…** to finish. ELK downloads on the first graph request and places tables automatically.
-3. Drag the blank area of a table header to move it. Drag empty canvas to pan; use the wheel or **Zoom In**, **Zoom Out**, and **Fit View** controls to navigate.
-4. Collapse/expand or hide individual tables with their header buttons. **Collapse all tables**, **Expand all tables**, **Relayout diagram**, and restore actions are also available. Hiding a table hides its connected edges. The inspector lists hidden tables for individual restoration.
-5. Select a table or its name to see metadata and immediate relationships. Column labels and arrowheads point from the referencing FK column toward the referenced column. Unrelated elements dim. Clear selection by clicking the canvas.
-6. Choose **System**, **Light**, or **Dark** from the header theme control. The browser remembers the choice; System follows the operating-system preference.
+1. Choose **Database service → Database → Schema**. Use a schema with **up to 50 combined tables and views** for the supported demo boundary. Larger schemas have no readability or performance guarantee; they are not truncated silently.
+2. Choose **Tables**, **Views**, or **Both** in the inspector. Tables are the default; views carry a **VIEW** badge. Relationships appear only when both endpoints are included in the current filter.
+3. Wait for **Laying out diagram…** to finish. The lazy-loaded ELK layout engine initializes on the first graph request and places the visible entities automatically.
+4. Drag the blank area of an entity header to move it. Drag empty canvas to pan; use the wheel or **Zoom In**, **Zoom Out**, and **Fit View** controls to navigate.
+5. Collapse/expand or hide individual entities with their header buttons. **Collapse all entities**, **Expand all entities**, **Relayout diagram**, and restore actions are also available. Hiding an entity hides its connected edges. The inspector lists hidden entities for individual restoration.
+6. Select an entity or its name to see metadata and immediate relationships. Column labels and arrowheads point from the referencing FK column toward the referenced column. Unrelated elements dim. Clear selection by clicking the canvas.
+7. Choose **System**, **Light**, or **Dark** from the header theme control. The browser remembers the choice; System follows the operating-system preference.
 
-Positions, collapse state, hidden tables, selection, and viewport exist only in browser memory. Schema changes and browser refresh reset that state. Relayout resets positions while retaining visibility and collapse choices. No diagram interaction writes to OpenMetadata.
+Positions, collapse state, hidden entities, selection, display filter, and viewport exist only in browser memory. Schema changes and browser refresh reset that state. Changing the display filter resets the current diagram view. Relayout resets positions while retaining visibility and collapse choices. No diagram interaction writes to OpenMetadata.
 
 Successful live data has a neutral status (no sample banner). Relationships whose endpoints are outside the selected schema are not rendered; they are summarized in one neutral notice, while malformed or unresolved same-schema constraints remain detailed warnings. A graph request that cannot reach OpenMetadata returns a bundled graph with a persistent **Sample data — OpenMetadata unavailable** banner and an explanatory warning. Missing metadata displays **Not assigned**. An empty live schema remains empty. Initial service/database/schema discovery still requires live connectivity; fallback is at the graph boundary and does not fabricate a catalog hierarchy.
 
@@ -88,8 +89,8 @@ The adapter caches successful graph responses for 60 seconds by default. `GET /a
 
 - **0:00–0:45 — Start.** Confirm the Docker stack is healthy, run `scripts/dev.ps1`, and open the viewer. Introduce the local adapter/API boundary and the server-only JWT.
 - **0:45–1:30 — Discover.** Select the service, database, and a useful schema with declared foreign keys. Explain that these are live catalog entities read through the version-matched SDK; neutral status indicates live data.
-- **1:30–2:45 — Explore.** Drag a table, pan, zoom, fit, and relayout. Collapse one/all tables, expand, hide a connected table, and restore it from the inspector. Explain that only declared same-schema FKs produce edges.
-- **2:45–3:45 — Inspect.** Select a table. Walk through its description, owner, tags/tier, column types, nullability, PK/FK badges, and incoming/outgoing references. Explain absent optional metadata and non-blocking constraint warnings.
+- **1:30–2:45 — Explore.** Switch among Tables, Views, and Both; point out the view badge; then drag an entity, pan, zoom, fit, and relayout. Collapse one/all entities, expand, hide a connected entity, and restore it from the inspector. Explain that only declared same-schema FKs whose endpoints pass the active filter produce edges.
+- **2:45–3:45 — Inspect.** Select an entity. Walk through its description, owner, tags/tier, column types and tags, nullability, PK/FK badges, and incoming/outgoing references. Explain absent optional metadata and non-blocking constraint warnings.
 - **3:45–4:15 — Reset.** Refresh the page, reselect the schema, and show that layout/display changes were temporary.
 - **4:15–5:00 — Fallback.** Run the deterministic browser scenario below to demonstrate the clearly labeled sample UI. For a real transport-failure demonstration, use the separate-terminal workflow: populate the selectors while live, stop only the adapter, temporarily set its `OMD_HOST` to `http://127.0.0.1:9/api` in that terminal, restart the adapter, and select the already populated schema. The frontend stays open. Show the sample banner, then stop the adapter, remove that temporary environment override, and restart with the valid `.env`. Keep the Docker catalog running and unchanged. Do not reload the frontend until live connectivity is restored.
 
@@ -108,7 +109,15 @@ rtk proxy npm.cmd run build --prefix frontend
 rtk proxy npm.cmd run test:e2e --prefix frontend
 ```
 
-The browser test starts and stops its own Vite server, uses Chromium, and covers catalog cascading, a real table drag, collapse/expand, hidden-edge removal and restoration, zoom/fit/relayout, rich metadata, ephemeral refresh state, read-only requests, and sample labeling. Failure screenshots and traces are ignored under `frontend/test-results/`; inspect a trace with `rtk proxy npx.cmd --prefix frontend playwright show-trace <trace.zip>`.
+The browser test starts and stops its own Vite server, uses Chromium, and covers catalog cascading, table/view filtering, a real entity drag, collapse/expand, hidden-edge removal and restoration, zoom/fit/relayout, theme persistence, rich metadata, relationship notices, ephemeral refresh state, read-only requests, and sample labeling. Failure screenshots and traces are ignored under `frontend/test-results/`; inspect a trace with `rtk proxy npx.cmd --prefix frontend playwright show-trace <trace.zip>`.
+
+If port 5173 is occupied by a development server you need to keep running, select another free port for the browser test in that PowerShell session:
+
+```powershell
+$env:PLAYWRIGHT_PORT = 5174
+rtk proxy npm.cmd run test:e2e --prefix frontend
+Remove-Item Env:PLAYWRIGHT_PORT
+```
 
 For live verification, use the actual Docker catalog, confirm the neutral live status, check the expected declared edges against the source constraints, exercise every canvas control, inspect metadata, and verify refresh reset. The app has no catalog write route. Check the worktree before committing and scan tracked files without printing any matching secret values:
 
@@ -119,7 +128,7 @@ rtk git grep -l -E "eyJ[a-zA-Z0-9_-]+\\.eyJ" -- .
 
 ## Architecture and boundaries
 
-`frontend/` is React/TypeScript with React Flow for the graph, lazy-loaded ELK for layered layout, and in-memory view state. `backend/` is FastAPI/Pydantic with the OpenMetadata Python SDK, pagination, normalized graph mapping, bounded request timeouts, graph caching, and a bundled fallback. OpenMetadata 2.0.5 remains the live source of truth.
+`frontend/` is React/TypeScript with React Flow for the graph, lazy-loaded ELK for layered layout, and in-memory view state. `backend/` is FastAPI/Pydantic with the OpenMetadata Python SDK, pagination, normalized table/view graph mapping, bounded request timeouts, graph caching, and a bundled fallback. OpenMetadata 2.0.5 remains the live source of truth.
 
 The adapter exposes fixed read-only catalog operations:
 
@@ -132,6 +141,24 @@ The adapter exposes fixed read-only catalog operations:
 
 There is no arbitrary-path proxy and no OpenMetadata write operation. Both development servers bind to loopback. This is a laptop demo, with no application authentication screens or application-level authorization.
 
-Explicit exclusions: metadata/relationship editing; saved or shareable layouts; image, PDF, or model export; authentication screens/application-level authorization; lineage or inferred relationships; cross-schema edges; collaboration or multi-user state; production deployment; mobile-specific design; and rendering guarantees beyond 50 tables.
+Explicit exclusions: metadata/relationship editing; saved or shareable layouts; image, PDF, or model export; authentication screens/application-level authorization; lineage or inferred relationships; cross-schema edges; collaboration or multi-user state; production deployment; mobile-specific design; and rendering guarantees beyond 50 combined tables and views.
+
+## Project layout
+
+| Path | Purpose |
+| --- | --- |
+| `backend/app/` | Read-only FastAPI adapter, OpenMetadata client, normalized models, cache, and bundled sample graph |
+| `backend/tests/` | Backend API and mapping tests |
+| `frontend/src/` | React application, graph layout/filtering, controls, inspector, and themes |
+| `frontend/e2e/` | Playwright browser scenario with deterministic API fixtures |
+| `scripts/dev.ps1` | Validated local launcher and process cleanup |
+
+## Troubleshooting
+
+- **The launcher reports missing dependencies:** repeat the corresponding Python editable install or `npm ci` command from First-time setup.
+- **Port 8000 or 5173 is in use:** stop the existing listener before starting the app. The launcher intentionally does not replace it.
+- **Catalog selectors fail to load:** confirm OpenMetadata is healthy at `OMD_HOST` and the bot JWT is valid and authorized for catalog reads. Sample fallback applies only after a schema has been selected and its graph request fails.
+- **The first graph is slow:** allow up to two minutes for cold OpenMetadata SDK startup and the first lazy ELK load. Check `.dev-logs/backend.err.log` and `.dev-logs/frontend.err.log` if a server exits.
+- **A relationship is missing:** confirm OpenMetadata declares the foreign key, both endpoints are in the selected schema, and both entity types are included by the current Tables/Views/Both filter.
 
 See the [design specification](docs/superpowers/specs/2026-10-21-openmetadata-erd-viewer-design.md) for the full contract.
