@@ -6,6 +6,7 @@ import { ErdCanvas, type CanvasDisplayState } from './components/ErdCanvas';
 import { InspectorPanel } from './components/InspectorPanel';
 import { CatalogSelector, type CatalogSelection } from './components/CatalogSelector';
 import { StatusBanner } from './components/StatusBanner';
+import { ThemeControl } from './components/ThemeControl';
 import './styles.css';
 
 export type AppProps = { api?: CatalogApi };
@@ -82,7 +83,10 @@ export function App({ api = catalogApi }: AppProps) {
           <p className="eyebrow">OpenMetadata</p>
           <h1>Schema explorer</h1>
         </div>
-        <CatalogSelector api={api} onSelectionChange={setSelection} />
+        <div className="header-controls">
+          <CatalogSelector api={api} onSelectionChange={setSelection} />
+          <ThemeControl />
+        </div>
       </header>
       <StatusBanner loading={loading} error={error} source={graph?.source ?? null} notices={graph?.notices ?? []} warnings={graph?.warnings ?? []} />
       <main className="app-content">
