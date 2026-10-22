@@ -5,7 +5,7 @@ const service = { id: 'svc-1', name: 'Demo SQL', fullyQualifiedName: 'Demo SQL' 
 const database = { id: 'db-1', name: 'Commerce', fullyQualifiedName: 'Demo SQL.Commerce' };
 const schema = { id: 'schema-1', name: 'Sales', fullyQualifiedName: 'Demo SQL.Commerce.Sales' };
 const graph: GraphResponse = {
-  source: 'live', schema, notices: [], warnings: [],
+  source: 'live', schema, notices: ['2 cross-schema relationships are not shown.'], warnings: [],
   tables: [
     {
       id: 'customer', name: 'Customer', fullyQualifiedName: `${schema.fullyQualifiedName}.Customer`, entityType: 'table',
@@ -75,7 +75,11 @@ test('explores the catalog, manipulates the diagram, inspects metadata, and labe
   await expect(customer.getByRole('list', { name: 'Customer columns', exact: true })).toContainText('INT');
   await expect(customer.getByRole('img', { name: 'Primary key', exact: true })).toBeVisible();
   await expect(page.getByText('Sample data — OpenMetadata unavailable')).toBeHidden();
+  await expect(page.getByRole('status', { name: 'Diagram notices' })).toHaveText('2 cross-schema relationships are not shown.');
   await expect(page.getByText('Laying out diagram…')).toBeHidden();
+
+  await page.getByRole('combobox', { name: 'Theme' }).selectOption('light');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 
   // A real pointer gesture exercises React Flow's table drag handle.
   const before = await customer.boundingBox();
@@ -113,6 +117,8 @@ test('explores the catalog, manipulates the diagram, inspects metadata, and labe
 
   await page.getByRole('button', { name: 'Hide Customer', exact: true }).click();
   await page.reload();
+  await expect(page.getByRole('combobox', { name: 'Theme' })).toHaveValue('light');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   await selectSchema();
   await expect(customer).toBeVisible();
   await expect(page.getByRole('button', { name: 'Collapse Customer', exact: true })).toBeVisible();
@@ -122,6 +128,8 @@ test('explores the catalog, manipulates the diagram, inspects metadata, and labe
   await page.getByRole('combobox', { name: 'Schema', exact: true }).selectOption('');
   await page.getByRole('combobox', { name: 'Schema', exact: true }).selectOption(schema.id);
   await expect(page.getByRole('status', { name: 'Data source' })).toHaveText('Sample data — OpenMetadata unavailable');
+  await page.getByRole('combobox', { name: 'Theme' }).selectOption('system');
+  await expect(page.getByRole('combobox', { name: 'Theme' })).toHaveValue('system');
   expect(requests).toContain('GET /api/services');
   expect(requests).toContain('GET /api/databases?serviceId=svc-1');
   expect(requests).toContain('GET /api/schemas?databaseId=db-1');
