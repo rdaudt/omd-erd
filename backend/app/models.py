@@ -43,6 +43,7 @@ class GraphResponse(BaseModel):
     schema_: CatalogItem = Field(alias="schema")
     tables: list[TableModel]
     relationships: list[RelationshipModel]
+    notices: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
 
     model_config = {"populate_by_name": True}

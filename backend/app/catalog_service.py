@@ -93,10 +93,19 @@ def _column_name_from_reference(target_fqn: str, reference: str) -> str | None:
     return unquote_name(reference_parts[-1]) or None
 
 
-def _map_relationships(tables: list[object], warnings: list[str]) -> list[RelationshipModel]:
+def _map_relationships(
+    tables: list[object],
+    selected_schema_fqn: str,
+    warnings: list[str],
+) -> tuple[list[RelationshipModel], int]:
     by_fqn = {_text(table.fullyQualifiedName): table for table in tables}
     ordered_fqns = sorted((fqn for fqn in by_fqn if fqn), key=len, reverse=True)
+    try:
+        selected_schema_parts = split_fqn(selected_schema_fqn)
+    except Exception:
+        selected_schema_parts = []
     relationships: list[RelationshipModel] = []
+    cross_schema_count = 0
     for table in tables:
         source_columns = {_text(column.name) for column in table.columns or []}
         for constraint in table.tableConstraints or []:
@@ -109,6 +118,17 @@ def _map_relationships(tables: list[object], warnings: list[str]) -> list[Relati
                 continue
             for source_column, reference in zip(local, referred):
                 target_fqn = next((fqn for fqn in ordered_fqns if reference and reference.startswith(fqn + ".")), None)
+                if not target_fqn and reference and selected_schema_parts:
+                    try:
+                        reference_parts = split_fqn(reference)
+                    except Exception:
+                        reference_parts = []
+                    if (
+                        len(reference_parts) == len(selected_schema_parts) + 2
+                        and reference_parts[:-2] != selected_schema_parts
+                    ):
+                        cross_schema_count += 1
+                        continue
                 target_table = by_fqn[target_fqn] if target_fqn else None
                 target_column = _column_name_from_reference(target_fqn, reference) if target_fqn and reference else None
                 target_columns = {_text(column.name) for column in target_table.columns or []} if target_table else set()
@@ -124,7 +144,7 @@ def _map_relationships(tables: list[object], warnings: list[str]) -> list[Relati
                     targetTableId=target_id,
                     targetColumn=target_column,
                 ))
-    return sorted(relationships, key=lambda relationship: relationship.id)
+    return sorted(relationships, key=lambda relationship: relationship.id), cross_schema_count
 
 
 class CatalogService:
@@ -219,11 +239,22 @@ class CatalogService:
                 tier=tier,
                 columns=[_map_column(column, primary_keys, foreign_keys) for column in table.columns or []],
             ))
+        relationships, cross_schema_count = _map_relationships(
+            tables,
+            _text(schema.fullyQualifiedName) or "",
+            warnings,
+        )
+        notices = []
+        if cross_schema_count == 1:
+            notices.append("1 cross-schema relationship is not shown.")
+        elif cross_schema_count > 1:
+            notices.append(f"{cross_schema_count} cross-schema relationships are not shown.")
         graph = GraphResponse(
             source="live",
             schema=CatalogItem(id=_text(schema.id) or "", name=_text(schema.name) or "", fullyQualifiedName=_text(schema.fullyQualifiedName) or ""),
             tables=sorted(mapped_tables, key=lambda table: (table.name.casefold(), table.id)),
-            relationships=_map_relationships(tables, warnings),
+            relationships=relationships,
+            notices=notices,
             warnings=warnings,
         )
         if self._cache_ttl_seconds > 0:

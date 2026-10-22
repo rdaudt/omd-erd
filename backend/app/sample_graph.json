@@ -52,5 +52,6 @@
     {"id": "salesorderdetail.ProductID->product.ProductID", "sourceTableId": "salesorderdetail", "sourceColumn": "ProductID", "targetTableId": "product", "targetColumn": "ProductID"},
     {"id": "ordersummary.SalesOrderID->salesorderheader.SalesOrderID", "sourceTableId": "ordersummary", "sourceColumn": "SalesOrderID", "targetTableId": "salesorderheader", "targetColumn": "SalesOrderID"}
   ],
+  "notices": [],
   "warnings": ["OpenMetadata is unavailable; showing bundled AdventureWorks sample data."]
 }

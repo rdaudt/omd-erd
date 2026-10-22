@@ -30,6 +30,7 @@ class StubCatalogService:
             "schema": {"id": schema_id, "name": "dbo", "fullyQualifiedName": "MSSQL Desktop.Warehouse.dbo"},
             "tables": [],
             "relationships": [],
+            "notices": ["2 cross-schema relationships are not shown."],
             "warnings": ["OpenMetadata is unavailable; showing bundled sample data."],
         }
 
@@ -113,6 +114,7 @@ def test_graph_route_serializes_schema_alias_and_forwards_refresh():
     assert response.json()["schema"]["id"] == "schema-1"
     assert "schema_" not in response.json()
     assert response.json()["warnings"]
+    assert response.json()["notices"] == ["2 cross-schema relationships are not shown."]
     assert service.graph_request == ("schema-1", True)
 
 def test_graph_route_rejects_unsafe_schema_ids_before_service_access():

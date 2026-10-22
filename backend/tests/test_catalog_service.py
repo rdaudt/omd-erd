@@ -146,6 +146,44 @@ def test_graph_skips_malformed_constraints_with_warning(fake_reader):
     assert "missing.table.id" in graph.warnings[0]
 
 
+def test_graph_summarizes_cross_schema_relationships_without_warnings(fake_reader):
+    orders = graph_table(
+        "orders", "orders", "svc.db.dbo.orders",
+        [graph_column("customer_id"), graph_column("address_id")],
+        [TableConstraint(
+            constraintType=ConstraintType.FOREIGN_KEY,
+            columns=["customer_id", "address_id"],
+            referredColumns=["svc.db.person.customer.id", "svc.db.person.address.id"],
+        )],
+    )
+    add_graph_schema(fake_reader, [orders])
+
+    graph = CatalogService(fake_reader, cache_ttl_seconds=60).get_schema_graph("schema-1")
+
+    assert graph.relationships == []
+    assert graph.notices == ["2 cross-schema relationships are not shown."]
+    assert graph.warnings == []
+
+
+def test_graph_keeps_malformed_same_schema_warning_beside_cross_schema_notice(fake_reader):
+    orders = graph_table(
+        "orders", "orders", "svc.db.dbo.orders",
+        [graph_column("customer_id"), graph_column("missing_id")],
+        [TableConstraint(
+            constraintType=ConstraintType.FOREIGN_KEY,
+            columns=["customer_id", "missing_id"],
+            referredColumns=["svc.db.person.customer.id", "svc.db.dbo.missing.id"],
+        )],
+    )
+    add_graph_schema(fake_reader, [orders])
+
+    graph = CatalogService(fake_reader, cache_ttl_seconds=60).get_schema_graph("schema-1")
+
+    assert graph.notices == ["1 cross-schema relationship is not shown."]
+    assert len(graph.warnings) == 1
+    assert "svc.db.dbo.missing.id" in graph.warnings[0]
+
+
 def test_graph_skips_incomplete_foreign_key_pairs(fake_reader):
     orders = graph_table(
         "orders", "orders", "svc.db.dbo.orders", [graph_column("customer_id")],
