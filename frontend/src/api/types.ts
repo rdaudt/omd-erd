@@ -13,10 +13,14 @@ export type ColumnModel = {
   description: string | null;
 };
 
+export type EntityType = 'table' | 'view';
+export type EntityDisplayMode = 'tables' | 'views' | 'both';
+
 export type TableModel = {
   id: string;
   name: string;
   fullyQualifiedName: string;
+  entityType: EntityType;
   description: string | null;
   owner: string | null;
   tags: string[];

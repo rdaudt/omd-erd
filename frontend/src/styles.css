@@ -87,6 +87,7 @@ p { line-height: 1.55; }
 .table-node[aria-label$="collapsed"] .table-node-header { border-radius: 7px; }
 .table-node button { padding: 4px; min-height: 28px; border-color: transparent; background: transparent; }
 .table-node .table-name { flex: 1; min-width: 0; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 650; }
+.entity-type-badge { padding: 2px 5px; border: 1px solid var(--accent); border-radius: 999px; color: var(--accent); font-size: 9px; line-height: 1; letter-spacing: .06em; }
 .table-count { color: var(--text-muted); font-size: 10px; white-space: nowrap; }
 .table-action { width: 26px; font-size: 18px; line-height: 1; }
 .table-column { display: flex; align-items: center; gap: 5px; padding: 0 8px; font-size: 12px; border-top: 1px solid #ffffff08; }
@@ -121,6 +122,12 @@ p { line-height: 1.55; }
 .diagram-stats span { padding: 6px 9px; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 5px; font-size: 12px; }
 .inspector-actions { display: grid; gap: var(--space-2); }
 .inspector-actions button { font-size: 12px; text-align: left; }
+.entity-mode { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-1); margin: 0 0 var(--space-3); padding: 0; border: 0; }
+.entity-mode legend { grid-column: 1 / -1; margin-bottom: var(--space-2); color: var(--text-muted); font-size: 12px; }
+.entity-mode input { position: absolute; opacity: 0; pointer-events: none; }
+.entity-mode span { display: block; padding: 7px 8px; border: 1px solid var(--border); border-radius: 6px; text-align: center; cursor: pointer; }
+.entity-mode input:checked + span { border-color: var(--accent); color: var(--text); background: var(--surface-raised); }
+.entity-mode input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
 .hidden-table-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); font-size: 13px; }
 .hidden-table-list button { min-height: 28px; font-size: 11px; color: var(--accent); }
 .restore-all { margin-top: var(--space-3); width: 100%; font-size: 12px; }

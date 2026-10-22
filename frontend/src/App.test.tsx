@@ -14,7 +14,9 @@ vi.mock('./components/ErdCanvas', () => ({
     const [localState, setLocalState] = useState(false);
     return <><button onClick={() => onSelectedTableChange(graph.tables[0])}>Select first table</button>
       <button onClick={() => setLocalState((value) => !value)}>Toggle local canvas state</button>
-      <output aria-label="Local canvas state">{String(localState)}</output></>;
+      <output aria-label="Local canvas state">{String(localState)}</output>
+      <output aria-label="Rendered entities">{graph.tables.map(({ id }) => id).join(',')}</output>
+      <output aria-label="Rendered relationships">{graph.relationships.map(({ id }) => id).join(',')}</output></>;
   },
 }));
 
@@ -45,9 +47,42 @@ async function selectSchema(user: ReturnType<typeof userEvent.setup>, schema: Ca
 }
 
 describe('App graph loading', () => {
+  it('renders tables by default and switches between views and both', async () => {
+    const user = userEvent.setup();
+    const mixed: GraphResponse = {
+      ...graph(schemaOne),
+      tables: [
+        { id: 'orders', name: 'Orders', fullyQualifiedName: 'Person.Orders', entityType: 'table', description: null, owner: null, tags: [], tier: null, columns: [] },
+        { id: 'customers', name: 'Customers', fullyQualifiedName: 'Person.Customers', entityType: 'table', description: null, owner: null, tags: [], tier: null, columns: [] },
+        { id: 'order-summary', name: 'Order summary', fullyQualifiedName: 'Person.OrderSummary', entityType: 'view', description: null, owner: null, tags: [], tier: null, columns: [] },
+      ],
+      relationships: [
+        { id: 'orders-customers', sourceTableId: 'orders', sourceColumn: 'customer_id', targetTableId: 'customers', targetColumn: 'id' },
+        { id: 'summary-orders', sourceTableId: 'order-summary', sourceColumn: 'order_id', targetTableId: 'orders', targetColumn: 'id' },
+      ],
+    };
+    render(<App api={api(vi.fn(async () => mixed))} />);
+    await selectSchema(user, schemaOne);
+
+    expect(await screen.findByLabelText('Rendered entities')).toHaveTextContent('orders,customers');
+    expect(screen.getByLabelText('Rendered relationships')).toHaveTextContent('orders-customers');
+    expect(screen.getByRole('radio', { name: 'Tables' })).toBeChecked();
+    await user.click(screen.getByRole('button', { name: 'Select first table' }));
+    expect(screen.getByRole('complementary', { name: 'Selected table' })).toHaveTextContent('Orders');
+
+    await user.click(screen.getByRole('radio', { name: 'Views' }));
+    expect(await screen.findByLabelText('Rendered entities')).toHaveTextContent('order-summary');
+    expect(screen.getByLabelText('Rendered relationships')).toBeEmptyDOMElement();
+    expect(screen.queryByRole('complementary', { name: 'Selected table' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: 'Both' }));
+    expect(await screen.findByLabelText('Rendered entities')).toHaveTextContent('orders,customers,order-summary');
+    expect(screen.getByLabelText('Rendered relationships')).toHaveTextContent('orders-customers,summary-orders');
+  });
+
   it.each(['Database service', 'Database', 'Schema'])('clears the diagram and selected metadata when %s is cleared', async (label) => {
     const user = userEvent.setup();
-    const table = { id: 'orders', name: 'Orders', fullyQualifiedName: 'Person.Orders', description: 'Selected metadata', owner: null, tags: [], tier: null, columns: [] };
+    const table = { id: 'orders', name: 'Orders', fullyQualifiedName: 'Person.Orders', entityType: 'table' as const, description: 'Selected metadata', owner: null, tags: [], tier: null, columns: [] };
     render(<App api={api(vi.fn(async () => ({ ...graph(schemaOne), tables: [table] })))} />);
     await selectSchema(user, schemaOne);
     await user.click(await screen.findByRole('button', { name: 'Select first table' }));
@@ -115,7 +150,7 @@ describe('App graph loading', () => {
     const user = userEvent.setup();
     const bundledSample = {
       ...graph({ id: 'bundled-sample', name: 'Sample', fullyQualifiedName: 'Sample' }, 'sample'),
-      tables: [{ id: 'sample-table', name: 'Sample table', fullyQualifiedName: 'Sample.Sample table', description: null, owner: null, tags: [], tier: null, columns: [] }],
+      tables: [{ id: 'sample-table', name: 'Sample table', fullyQualifiedName: 'Sample.Sample table', entityType: 'table' as const, description: null, owner: null, tags: [], tier: null, columns: [] }],
     };
     render(<App api={api(vi.fn(async () => bundledSample))} />);
 
@@ -145,7 +180,7 @@ describe('App graph loading', () => {
 
   it('clears the selected table when the same schema is refreshed with zero tables', async () => {
     const user = userEvent.setup();
-    const table = { id: 'orders', name: 'Orders', fullyQualifiedName: 'Person.Orders', description: null, owner: null, tags: [], tier: null, columns: [] };
+    const table = { id: 'orders', name: 'Orders', fullyQualifiedName: 'Person.Orders', entityType: 'table' as const, description: null, owner: null, tags: [], tier: null, columns: [] };
     const initial = { ...graph(schemaOne), tables: [table] };
     const initialApi = api(vi.fn(async () => initial));
     const { rerender } = render(<App api={initialApi} />);
@@ -160,7 +195,7 @@ describe('App graph loading', () => {
 
   it('refreshes the App selected table object when the same schema retains that table', async () => {
     const user = userEvent.setup();
-    const table = { id: 'orders', name: 'Orders', fullyQualifiedName: 'Person.Orders', description: null, owner: null, tags: [], tier: null, columns: [] };
+    const table = { id: 'orders', name: 'Orders', fullyQualifiedName: 'Person.Orders', entityType: 'table' as const, description: null, owner: null, tags: [], tier: null, columns: [] };
     const initial = { ...graph(schemaOne), tables: [table] };
     const initialApi = api(vi.fn(async () => initial));
     const { rerender } = render(<App api={initialApi} />);

@@ -1,9 +1,12 @@
-import type { GraphResponse, RelationshipModel, TableModel } from '../api/types';
+import type { EntityDisplayMode, GraphResponse, RelationshipModel, TableModel } from '../api/types';
+import { entityCounts, filterGraph } from '../graph/entityFilter';
 
 export type InspectorPanelProps = {
   graph: GraphResponse | null;
   selectedTable: TableModel | null;
-  hiddenTableIds: ReadonlySet<string>;
+  displayMode: EntityDisplayMode;
+  onDisplayModeChange: (mode: EntityDisplayMode) => void;
+  hiddenEntityIds: ReadonlySet<string>;
   disabled: boolean;
   onRestoreTable: (id: string) => void;
   onRestoreAll: () => void;
@@ -14,9 +17,11 @@ export type InspectorPanelProps = {
 
 const assigned = (value: string | null) => value?.trim() || 'Not assigned';
 
-export function InspectorPanel({ graph, selectedTable, hiddenTableIds, disabled, onRestoreTable, onRestoreAll, onCollapseAll, onExpandAll, onRelayout }: InspectorPanelProps) {
+export function InspectorPanel({ graph, selectedTable, displayMode, onDisplayModeChange, hiddenEntityIds, disabled, onRestoreTable, onRestoreAll, onCollapseAll, onExpandAll, onRelayout }: InspectorPanelProps) {
   const tables = new Map(graph?.tables.map((table) => [table.id, table]) ?? []);
-  const hiddenTables = graph?.tables.filter((table) => hiddenTableIds.has(table.id)) ?? [];
+  const displayedGraph = graph ? filterGraph(graph, displayMode) : null;
+  const hiddenEntities = displayedGraph?.tables.filter((table) => hiddenEntityIds.has(table.id)) ?? [];
+  const counts = graph ? entityCounts(graph) : { tables: 0, views: 0 };
   const incoming = graph?.relationships.filter((edge) => edge.targetTableId === selectedTable?.id) ?? [];
   const outgoing = graph?.relationships.filter((edge) => edge.sourceTableId === selectedTable?.id) ?? [];
 
@@ -31,8 +36,15 @@ export function InspectorPanel({ graph, selectedTable, hiddenTableIds, disabled,
 
   return <aside className="inspector-panel" aria-label={selectedTable ? 'Selected table' : 'Diagram inspector'}>
     <div className="inspector-content" key={selectedTable?.id ?? 'overview'}>
-      <p className="eyebrow">{selectedTable ? 'Table details' : 'Workspace'}</p>
+      <p className="eyebrow">{selectedTable ? `${selectedTable.entityType === 'view' ? 'View' : 'Table'} details` : 'Workspace'}</p>
       <h2>{selectedTable?.name ?? 'Diagram overview'}</h2>
+      <fieldset className="entity-mode" role="radiogroup" aria-label="Entities to display">
+        <legend>Show</legend>
+        {([['tables', 'Tables'], ['views', 'Views'], ['both', 'Both']] as const).map(([value, label]) => <label key={value}>
+          <input type="radio" name="entity-display-mode" value={value} checked={displayMode === value} onChange={() => onDisplayModeChange(value)} />
+          <span>{label}</span>
+        </label>)}
+      </fieldset>
       {selectedTable ? <>
         <p className="qualified-name">{selectedTable.fullyQualifiedName}</p>
         <section className="inspector-section" aria-label="Table metadata">
@@ -55,23 +67,26 @@ export function InspectorPanel({ graph, selectedTable, hiddenTableIds, disabled,
         {references('Incoming references', incoming)}
         {references('Outgoing references', outgoing)}
       </> : <>
-        <p className="muted">Select a table to explore its metadata and foreign keys.</p>
+        <p className="muted">Select an entity to explore its metadata and foreign keys.</p>
         <section className="diagram-stats" aria-label="Diagram counts">
-          <span>{graph?.tables.length ?? 0} tables</span><span>{graph?.relationships.length ?? 0} relationships</span>
-          <span>{(graph?.tables.length ?? 0) - hiddenTables.length} visible</span>
+          <span>{counts.tables} {counts.tables === 1 ? 'table' : 'tables'}</span>
+          <span>{counts.views} {counts.views === 1 ? 'view' : 'views'}</span>
+          <span>{displayedGraph?.relationships.length ?? 0} relationships</span>
+          <span>{(displayedGraph?.tables.length ?? 0) - hiddenEntities.length} visible</span>
         </section>
         <section className="inspector-section" aria-label="Display actions">
-          <h3>Display</h3><div className="inspector-actions">
-            <button disabled={disabled} onClick={onCollapseAll}>Collapse all tables</button>
-            <button disabled={disabled} onClick={onExpandAll}>Expand all tables</button>
+          <h3>Display</h3>
+          <div className="inspector-actions">
+            <button disabled={disabled} onClick={onCollapseAll}>Collapse all entities</button>
+            <button disabled={disabled} onClick={onExpandAll}>Expand all entities</button>
             <button disabled={disabled} onClick={onRelayout}>Relayout diagram</button>
           </div>
         </section>
       </>}
-      <section className="inspector-section" aria-label="Hidden tables">
-        <h3>Hidden tables <span className="count-badge">{hiddenTables.length}</span></h3>
-        {hiddenTables.length ? <ul className="hidden-table-list">{hiddenTables.map((table) => <li key={table.id}><span>{table.name}</span><button aria-label={`Restore ${table.name}`} onClick={() => onRestoreTable(table.id)}>Restore</button></li>)}</ul> : <p className="muted">All tables are visible.</p>}
-        <button className="restore-all" disabled={disabled || hiddenTables.length === 0} onClick={onRestoreAll}>Restore all hidden tables</button>
+      <section className="inspector-section" aria-label="Hidden entities">
+        <h3>Hidden entities <span className="count-badge">{hiddenEntities.length}</span></h3>
+        {hiddenEntities.length ? <ul className="hidden-table-list">{hiddenEntities.map((table) => <li key={table.id}><span>{table.name}</span><button aria-label={`Restore ${table.name}`} onClick={() => onRestoreTable(table.id)}>Restore</button></li>)}</ul> : <p className="muted">All entities are visible.</p>}
+        <button className="restore-all" disabled={disabled || hiddenEntities.length === 0} onClick={onRestoreAll}>Restore all hidden entities</button>
       </section>
     </div>
   </aside>;

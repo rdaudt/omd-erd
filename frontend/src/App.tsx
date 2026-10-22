@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { catalogApi, type CatalogApi } from './api/client';
-import type { GraphResponse, TableModel } from './api/types';
+import type { EntityDisplayMode, GraphResponse, TableModel } from './api/types';
+import { emptyMessage, entityCounts, filterGraph } from './graph/entityFilter';
 import { ErdCanvas, type CanvasDisplayState } from './components/ErdCanvas';
 import { InspectorPanel } from './components/InspectorPanel';
 import { CatalogSelector, type CatalogSelection } from './components/CatalogSelector';
@@ -9,7 +10,7 @@ import './styles.css';
 
 export type AppProps = { api?: CatalogApi };
 const emptyDisplayState: CanvasDisplayState = {
-  hiddenTableIds: new Set<string>(), disabled: true,
+  hiddenEntityIds: new Set<string>(), disabled: true,
   onRestoreTable: () => undefined, onRestoreAll: () => undefined,
   onCollapseAll: () => undefined, onExpandAll: () => undefined, onRelayout: () => undefined,
 };
@@ -20,10 +21,13 @@ export function App({ api = catalogApi }: AppProps) {
   const [loadedSchemaId, setLoadedSchemaId] = useState<string | null>(null);
   const [selectedTable, setSelectedTable] = useState<TableModel | null>(null);
   const [displayState, setDisplayState] = useState<CanvasDisplayState | null>(null);
+  const [displayMode, setDisplayMode] = useState<EntityDisplayMode>('tables');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const schemaId = selection.schema?.id;
-  const inspectedTable = graph?.tables.find((table) => table.id === selectedTable?.id) ?? null;
+  const renderedGraph = useMemo(() => graph ? filterGraph(graph, displayMode) : null, [graph, displayMode]);
+  const inspectedTable = renderedGraph?.tables.find((table) => table.id === selectedTable?.id) ?? null;
+  const counts = graph ? entityCounts(graph) : { tables: 0, views: 0 };
 
   useEffect(() => {
     setSelectedTable((previous) => graph?.tables.find((table) => table.id === previous?.id) ?? null);
@@ -37,6 +41,7 @@ export function App({ api = catalogApi }: AppProps) {
       setDisplayState(null);
       setLoading(false);
       setError(null);
+      setDisplayMode('tables');
       return;
     }
 
@@ -64,6 +69,12 @@ export function App({ api = catalogApi }: AppProps) {
     return () => request.abort();
   }, [api, schemaId]);
 
+  function changeDisplayMode(mode: EntityDisplayMode) {
+    setSelectedTable(null);
+    setDisplayState(null);
+    setDisplayMode(mode);
+  }
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -79,15 +90,15 @@ export function App({ api = catalogApi }: AppProps) {
           {graph ? (
             <>
               <div className="diagram-heading"><h2>{graph.schema.name} diagram</h2>
-                <p>{graph.tables.length} tables · {graph.relationships.length} relationships</p></div>
-              {graph.tables.length === 0 && <div className="empty-state"><p>No tables in this schema.</p></div>}
-              {graph.tables.length > 0 && <ErdCanvas key={loadedSchemaId ?? graph.schema.id} graph={graph} onSelectedTableChange={setSelectedTable} onDisplayStateChange={setDisplayState} />}
+                <p>{counts.tables} tables · {counts.views} views · {renderedGraph?.relationships.length ?? 0} relationships</p></div>
+              {renderedGraph?.tables.length === 0 && <div className="empty-state"><p>{emptyMessage(displayMode)}</p></div>}
+              {renderedGraph && renderedGraph.tables.length > 0 && <ErdCanvas key={`${loadedSchemaId ?? graph.schema.id}:${displayMode}`} graph={renderedGraph} onSelectedTableChange={setSelectedTable} onDisplayStateChange={setDisplayState} />}
             </>
           ) : (
             <div className="empty-state"><p className="eyebrow">Explore your catalog</p><h2>Every relationship, in view.</h2><p>Select a service, database, and schema to view its diagram.</p></div>
           )}
         </section>
-        <InspectorPanel graph={graph} selectedTable={inspectedTable} {...(displayState ?? emptyDisplayState)} />
+        <InspectorPanel graph={graph} selectedTable={inspectedTable} displayMode={displayMode} onDisplayModeChange={changeDisplayMode} {...(displayState ?? emptyDisplayState)} />
       </main>
     </div>
   );

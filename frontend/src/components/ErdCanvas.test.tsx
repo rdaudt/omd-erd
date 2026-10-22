@@ -55,13 +55,20 @@ vi.mock('@xyflow/react', async (importOriginal) => {
 const graph: GraphResponse = {
   source: 'live', schema: { id: 'one', name: 'Sales', fullyQualifiedName: 'Sales' }, warnings: [],
   tables: ['Orders', 'Customer'].map((name) => ({
-    id: name, name, fullyQualifiedName: name, description: null, owner: null, tags: [], tier: null,
+    id: name, name, fullyQualifiedName: name, entityType: 'table', description: null, owner: null, tags: [], tier: null,
     columns: [{ name: name === 'Orders' ? 'customer_id' : 'id', dataType: 'INT', nullable: false, primaryKey: name === 'Customer', foreignKey: name === 'Orders', description: null }],
   })),
   relationships: [{ id: 'fk', sourceTableId: 'Orders', sourceColumn: 'customer_id', targetTableId: 'Customer', targetColumn: 'id' }],
 };
 
 describe('ERD canvas interactions', () => {
+  it('labels view nodes visibly and accessibly', async () => {
+    const view = { ...graph.tables[0], id: 'Summary', name: 'Summary', entityType: 'view' as const };
+    render(<ErdCanvas graph={{ ...graph, tables: [view], relationships: [] }} onSelectedTableChange={vi.fn()} />);
+    expect(await screen.findByRole('article', { name: 'Summary view, expanded' })).toBeInTheDocument();
+    expect(screen.getByText('VIEW')).toBeInTheDocument();
+  });
+
   it('waits for measured nodes before fitting and does not refit when tables are restored', async () => {
     fitView.mockClear();
     nodeMeasurement.ready = false;
@@ -85,7 +92,7 @@ describe('ERD canvas interactions', () => {
     const onDisplayStateChange = vi.fn();
     render(<ErdCanvas graph={graph} onSelectedTableChange={vi.fn()} onDisplayStateChange={onDisplayStateChange} />);
     await user.click(await screen.findByRole('button', { name: 'Hide Orders' }));
-    await waitFor(() => expect(onDisplayStateChange.mock.lastCall?.[0].hiddenTableIds.has('Orders')).toBe(true));
+    await waitFor(() => expect(onDisplayStateChange.mock.lastCall?.[0].hiddenEntityIds.has('Orders')).toBe(true));
     act(() => onDisplayStateChange.mock.lastCall?.[0].onRestoreTable('Orders'));
     expect(await screen.findByRole('button', { name: 'Select Orders' })).toBeInTheDocument();
     act(() => onDisplayStateChange.mock.lastCall?.[0].onCollapseAll());
@@ -137,7 +144,7 @@ describe('ERD canvas interactions', () => {
     expect(screen.queryByRole('button', { name: 'Select Orders' })).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Orders.customer_id references Customer.id')).not.toBeInTheDocument();
     expect(onSelectedTableChange).toHaveBeenLastCalledWith(null);
-    await user.click(screen.getByRole('button', { name: 'Restore all tables' }));
+    await user.click(screen.getByRole('button', { name: 'Restore all entities' }));
     expect(screen.getByRole('button', { name: 'Select Orders' })).toBeInTheDocument();
     expect(screen.getByLabelText('Orders.customer_id references Customer.id')).toBeInTheDocument();
     expect(fitView).toHaveBeenCalledWith({ padding: 0.15, duration: 350 });
@@ -149,10 +156,10 @@ describe('ERD canvas interactions', () => {
     await screen.findByRole('button', { name: 'Move Orders' });
     await user.click(screen.getByRole('button', { name: 'Move Orders' }));
     await user.click(screen.getByRole('button', { name: 'Select Orders' }));
-    await user.click(screen.getByRole('button', { name: 'Collapse all tables' }));
-    await user.click(screen.getByRole('button', { name: 'Expand all tables' }));
+    await user.click(screen.getByRole('button', { name: 'Collapse all entities' }));
+    await user.click(screen.getByRole('button', { name: 'Expand all entities' }));
     await user.click(screen.getByRole('button', { name: 'Hide Orders' }));
-    await user.click(screen.getByRole('button', { name: 'Restore all tables' }));
+    await user.click(screen.getByRole('button', { name: 'Restore all entities' }));
     rerender(<ErdCanvas graph={{ ...graph, warnings: ['Refreshed'] }} onSelectedTableChange={vi.fn()} />);
     expect(screen.getByLabelText('Orders position')).toHaveTextContent('777,333');
     await waitFor(() => expect(screen.getByRole('button', { name: 'Relayout diagram' })).toBeEnabled());

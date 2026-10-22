@@ -7,12 +7,13 @@ import { InspectorPanel, type InspectorPanelProps } from './InspectorPanel';
 const graph: GraphResponse = {
   source: 'live', schema: { id: 'sales', name: 'Sales', fullyQualifiedName: 'Warehouse.Sales' }, warnings: [],
   tables: [
-    { id: 'orders', name: 'Orders', fullyQualifiedName: 'Sales.Orders', description: 'Customer purchases', owner: 'Commerce team', tier: 'Tier1', tags: ['PII.Sensitive', 'Domain.Commerce'], columns: [
+    { id: 'orders', name: 'Orders', fullyQualifiedName: 'Sales.Orders', entityType: 'table', description: 'Customer purchases', owner: 'Commerce team', tier: 'Tier1', tags: ['PII.Sensitive', 'Domain.Commerce'], columns: [
       { name: 'id', dataType: 'BIGINT', nullable: false, primaryKey: true, foreignKey: false, description: 'Order identifier' },
       { name: 'customer_id', dataType: 'INT', nullable: true, primaryKey: false, foreignKey: true, description: null },
     ] },
-    { id: 'customers', name: 'Customers', fullyQualifiedName: 'Sales.Customers', description: null, owner: null, tier: null, tags: [], columns: [] },
-    { id: 'lines', name: 'OrderLines', fullyQualifiedName: 'Sales.OrderLines', description: null, owner: null, tier: null, tags: [], columns: [] },
+    { id: 'customers', name: 'Customers', fullyQualifiedName: 'Sales.Customers', entityType: 'table', description: null, owner: null, tier: null, tags: [], columns: [] },
+    { id: 'lines', name: 'OrderLines', fullyQualifiedName: 'Sales.OrderLines', entityType: 'table', description: null, owner: null, tier: null, tags: [], columns: [] },
+    { id: 'summary', name: 'OrderSummary', fullyQualifiedName: 'Sales.OrderSummary', entityType: 'view', description: null, owner: null, tier: null, tags: [], columns: [] },
   ],
   relationships: [
     { id: 'outgoing', sourceTableId: 'orders', sourceColumn: 'customer_id', targetTableId: 'customers', targetColumn: 'id' },
@@ -21,7 +22,7 @@ const graph: GraphResponse = {
 };
 
 function props(overrides: Partial<InspectorPanelProps> = {}): InspectorPanelProps {
-  return { graph, selectedTable: null, hiddenTableIds: new Set(['lines']), disabled: false,
+  return { graph, selectedTable: null, displayMode: 'tables', onDisplayModeChange: vi.fn(), hiddenEntityIds: new Set(['lines']), disabled: false,
     onRestoreTable: vi.fn(), onRestoreAll: vi.fn(), onCollapseAll: vi.fn(), onExpandAll: vi.fn(), onRelayout: vi.fn(), ...overrides };
 }
 
@@ -32,17 +33,28 @@ describe('InspectorPanel', () => {
     render(<InspectorPanel {...actions} />);
     const panel = screen.getByRole('complementary', { name: 'Diagram inspector' });
     expect(within(panel).getByText('3 tables')).toBeInTheDocument();
+    expect(within(panel).getByText('1 view')).toBeInTheDocument();
     expect(within(panel).getByText('2 relationships')).toBeInTheDocument();
     expect(within(panel).getByText('2 visible')).toBeInTheDocument();
     await user.click(within(panel).getByRole('button', { name: 'Restore OrderLines' }));
     expect(actions.onRestoreTable).toHaveBeenCalledWith('lines');
     for (const [name, action] of [
-      ['Restore all hidden tables', actions.onRestoreAll], ['Collapse all tables', actions.onCollapseAll],
-      ['Expand all tables', actions.onExpandAll], ['Relayout diagram', actions.onRelayout],
+      ['Restore all hidden entities', actions.onRestoreAll], ['Collapse all entities', actions.onCollapseAll],
+      ['Expand all entities', actions.onExpandAll], ['Relayout diagram', actions.onRelayout],
     ] as const) {
       await user.click(within(panel).getByRole('button', { name }));
       expect(action).toHaveBeenCalledOnce();
     }
+  });
+
+  it('selects tables by default and publishes display-mode changes', async () => {
+    const user = userEvent.setup();
+    const actions = props();
+    render(<InspectorPanel {...actions} />);
+    const group = screen.getByRole('radiogroup', { name: 'Entities to display' });
+    expect(within(group).getByRole('radio', { name: 'Tables' })).toBeChecked();
+    await user.click(within(group).getByRole('radio', { name: 'Views' }));
+    expect(actions.onDisplayModeChange).toHaveBeenCalledWith('views');
   });
 
   it('shows selected OMD metadata, columns, keys, and both relationship directions', () => {
@@ -66,10 +78,10 @@ describe('InspectorPanel', () => {
   });
 
   it('keeps the same panel mounted as selection changes and disables unavailable actions', () => {
-    const { rerender } = render(<InspectorPanel {...props({ graph: null, hiddenTableIds: new Set(), disabled: true })} />);
+    const { rerender } = render(<InspectorPanel {...props({ graph: null, hiddenEntityIds: new Set(), disabled: true })} />);
     const panel = screen.getByRole('complementary', { name: 'Diagram inspector' });
     expect(within(panel).getByRole('button', { name: 'Relayout diagram' })).toBeDisabled();
-    expect(within(panel).getByRole('button', { name: 'Restore all hidden tables' })).toBeDisabled();
+    expect(within(panel).getByRole('button', { name: 'Restore all hidden entities' })).toBeDisabled();
     rerender(<InspectorPanel {...props({ selectedTable: graph.tables[0] })} />);
     expect(screen.getByRole('complementary', { name: 'Selected table' })).toBe(panel);
   });

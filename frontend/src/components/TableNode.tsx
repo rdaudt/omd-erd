@@ -4,15 +4,17 @@ import { COLUMN_HEIGHT, HEADER_HEIGHT, TABLE_WIDTH, columnPortId, columnPortTop,
 
 export function TableNode({ id, data, selected }: NodeProps<TableFlowNode>) {
   const { table, collapsed, related, onSelect, onToggleCollapsed, onHide } = data;
+  const entityLabel = table.entityType === 'view' ? 'view' : 'table';
   const updateNodeInternals = useUpdateNodeInternals();
   useEffect(() => { updateNodeInternals(id); }, [id, collapsed, table.columns, updateNodeInternals]);
 
   return (
     <article className={`table-node${selected ? ' is-selected' : ''}${related ? ' is-related' : ''}`}
-      aria-label={`${table.name} table, ${collapsed ? 'collapsed' : 'expanded'}`}
+      aria-label={`${table.name} ${entityLabel}, ${collapsed ? 'collapsed' : 'expanded'}`}
       style={{ width: TABLE_WIDTH }}>
       <div className="table-node-header" style={{ height: HEADER_HEIGHT }}>
         <button className="nodrag table-name" aria-label={`Select ${table.name}`} aria-pressed={selected} onClick={(event) => { event.stopPropagation(); onSelect?.(id); }} title={table.fullyQualifiedName}>{table.name}</button>
+        {table.entityType === 'view' && <span className="entity-type-badge">VIEW</span>}
         {collapsed && <span className="table-count">{table.columns.length} cols</span>}
         <button className="nodrag table-action" aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${table.name}`} aria-expanded={!collapsed} onClick={(event) => { event.stopPropagation(); onToggleCollapsed?.(id); }}>{collapsed ? '+' : '−'}</button>
         <button className="nodrag table-action" aria-label={`Hide ${table.name}`} onClick={(event) => { event.stopPropagation(); onHide?.(id); }}>×</button>

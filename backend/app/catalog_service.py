@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import logging
 from pathlib import Path
 from time import monotonic
+from typing import Literal
 
 from metadata.generated.schema.entity.data.database import Database
 from metadata.generated.schema.entity.data.databaseSchema import DatabaseSchema
@@ -16,6 +17,8 @@ from app.models import CatalogItem, ColumnModel, GraphResponse, RelationshipMode
 from app.openmetadata_client import OpenMetadataReader
 
 logger = logging.getLogger(__name__)
+
+VIEW_TABLE_TYPES = {"View", "SecureView", "MaterializedView"}
 
 
 class CatalogNotFoundError(Exception):
@@ -33,6 +36,9 @@ def _text(value: object | None) -> str | None:
         return None
     unwrapped = getattr(value, "root", value)
     return str(getattr(unwrapped, "value", unwrapped))
+
+def _entity_type(table: object) -> Literal["table", "view"]:
+    return "view" if _text(getattr(table, "tableType", None)) in VIEW_TABLE_TYPES else "table"
 
 
 def _column_flags(table) -> tuple[set[str], set[str]]:
@@ -189,7 +195,7 @@ class CatalogService:
                 raise CatalogNotFoundError(schema_id)
             tables = self._all_entities(
                 Table,
-                fields=["columns", "tableConstraints", "owners", "tags"],
+                fields=["columns", "tableConstraints", "owners", "tags", "tableType"],
                 params={"databaseSchema": model_str(schema.fullyQualifiedName)},
             )
         except (RequestsConnectionError, RequestsTimeout, TimeoutError, ConnectionError,
@@ -206,6 +212,7 @@ class CatalogService:
                 id=_text(table.id) or "",
                 name=_text(table.name) or "",
                 fullyQualifiedName=_text(table.fullyQualifiedName) or "",
+                entityType=_entity_type(table),
                 description=_text(getattr(table, "description", None)),
                 owner=_display_owner(table),
                 tags=tags,

@@ -10,6 +10,7 @@ The demo is aimed at a data architecture audience. Its visual centerpiece is a p
 
 - Users select an OpenMetadata database service, database, and schema in that order.
 - A schema containing up to 50 tables renders as a readable ERD.
+- Users can render tables only, views only, or both; tables only is the default.
 - Only declared foreign-key relationships appear as edges.
 - Users can drag tables, pan and zoom the canvas, fit the diagram to view, and rerun automatic layout.
 - Users can collapse or expand individual tables and all visible tables.
@@ -94,6 +95,7 @@ The graph response has this conceptual form:
       "id": "table-id",
       "name": "Address",
       "fullyQualifiedName": "MSSQL Desktop.AdventureWorks2019.Person.Address",
+      "entityType": "table",
       "description": "Postal addresses used by customers and vendors.",
       "owner": "Data Architecture",
       "tags": ["PII.Sensitive"],
@@ -125,6 +127,8 @@ The graph response has this conceptual form:
 
 `source` is either `live` or `sample`. Relationship IDs are stable within a graph response and derived from their endpoints when OpenMetadata does not supply a suitable constraint identifier.
 
+`entityType` is normalized to `table` or `view`. OpenMetadata `View`, `SecureView`, and `MaterializedView` values map to `view`; all other, missing, and future values map to `table` so existing entities remain visible by default.
+
 ## Frontend structure
 
 ### `CatalogSelector`
@@ -145,7 +149,7 @@ Renders a directed foreign-key connection with source and target column labels. 
 
 ### `InspectorPanel`
 
-When no table is selected, the panel presents diagram counts, display settings, and hidden-table restoration. When a table is selected, it shows description, owner, tags, tier, columns, primary keys, and incoming and outgoing foreign keys.
+The panel always presents a Tables, Views, or Both display selector. When no entity is selected, it also presents diagram counts, display settings, and hidden-entity restoration. When an entity is selected, it shows description, owner, tags, tier, columns, primary keys, and incoming and outgoing foreign keys.
 
 ### `CanvasControls`
 
@@ -158,6 +162,9 @@ Communicates loading, non-blocking warnings, and data source. Fallback mode alwa
 ## Interaction model
 
 - Selecting a schema requests its complete graph once.
+- The browser filters the complete graph by the selected display mode; relationships render only when both endpoints remain.
+- Tables is the initial mode. The mode is retained while changing schemas in the current session, but is not persisted across a browser reload.
+- Changing display mode clears selection and resets ephemeral canvas layout, hide, collapse, pan, and zoom state.
 - ELK produces the initial positions; users may then reposition tables freely.
 - Dragging, hiding, expanding, collapsing, zooming, and panning affect browser memory only.
 - Hiding a table hides all incident edges without deleting graph data.
@@ -182,7 +189,7 @@ The selected direction is a full-height midnight canvas with a right-side inspec
 
 - Selector requests show localized loading states and preserve the last successful canvas where appropriate.
 - Graph loading shows a canvas skeleton and prevents conflicting diagram actions.
-- An empty live schema shows an intentional empty state and is not replaced by sample data.
+- An empty display mode shows a mode-specific message for no tables, no views, or no tables or views, and is not replaced by sample data.
 - Missing optional metadata renders as absent or `Not assigned`, not as an error.
 - Malformed or unresolved foreign keys are skipped, counted, and reported as a non-blocking warning.
 - OpenMetadata calls use bounded timeouts.
@@ -206,7 +213,7 @@ Verify the four GET endpoints, parent-child validation, response models, live an
 
 ### Frontend tests
 
-Verify selector cascading, graph loading states, table expansion and collapse, hide and restore behavior, connected-edge visibility, inspector content, relationship highlighting, and source banners.
+Verify selector cascading, graph loading states, table/view/both filtering with tables as the default, entity expansion and collapse, hide and restore behavior, connected-edge visibility, inspector content, relationship highlighting, and source banners.
 
 ### Graph transformation tests
 

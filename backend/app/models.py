@@ -22,6 +22,7 @@ class TableModel(BaseModel):
     id: str
     name: str
     fullyQualifiedName: str
+    entityType: Literal["table", "view"]
     description: str | None = None
     owner: str | None = None
     tags: list[str] = Field(default_factory=list)

@@ -3,7 +3,7 @@
   "schema": {"id": "adventureworks-sales", "name": "Sales", "fullyQualifiedName": "AdventureWorks.Sales"},
   "tables": [
     {
-      "id": "customer", "name": "Customer", "fullyQualifiedName": "AdventureWorks.Sales.Customer",
+      "id": "customer", "name": "Customer", "fullyQualifiedName": "AdventureWorks.Sales.Customer", "entityType": "table",
       "description": "Customers placing orders", "owner": "Sales Analytics", "tags": [], "tier": "Tier1",
       "columns": [
         {"name": "CustomerID", "dataType": "INT", "nullable": false, "primaryKey": true},
@@ -11,7 +11,7 @@
       ]
     },
     {
-      "id": "product", "name": "Product", "fullyQualifiedName": "AdventureWorks.Sales.Product",
+      "id": "product", "name": "Product", "fullyQualifiedName": "AdventureWorks.Sales.Product", "entityType": "table",
       "description": "Products available for sale", "owner": "Sales Analytics", "tags": [], "tier": "Tier1",
       "columns": [
         {"name": "ProductID", "dataType": "INT", "nullable": false, "primaryKey": true},
@@ -19,7 +19,7 @@
       ]
     },
     {
-      "id": "salesorderheader", "name": "SalesOrderHeader", "fullyQualifiedName": "AdventureWorks.Sales.SalesOrderHeader",
+      "id": "salesorderheader", "name": "SalesOrderHeader", "fullyQualifiedName": "AdventureWorks.Sales.SalesOrderHeader", "entityType": "table",
       "description": "Order headers", "owner": "Sales Analytics", "tags": [], "tier": "Tier1",
       "columns": [
         {"name": "SalesOrderID", "dataType": "INT", "nullable": false, "primaryKey": true},
@@ -28,7 +28,7 @@
       ]
     },
     {
-      "id": "salesorderdetail", "name": "SalesOrderDetail", "fullyQualifiedName": "AdventureWorks.Sales.SalesOrderDetail",
+      "id": "salesorderdetail", "name": "SalesOrderDetail", "fullyQualifiedName": "AdventureWorks.Sales.SalesOrderDetail", "entityType": "table",
       "description": "Products on each order", "owner": "Sales Analytics", "tags": [], "tier": "Tier1",
       "columns": [
         {"name": "SalesOrderDetailID", "dataType": "INT", "nullable": false, "primaryKey": true},
@@ -36,12 +36,21 @@
         {"name": "ProductID", "dataType": "INT", "nullable": false, "foreignKey": true},
         {"name": "OrderQty", "dataType": "SMALLINT", "nullable": false}
       ]
+    },
+    {
+      "id": "ordersummary", "name": "OrderSummary", "fullyQualifiedName": "AdventureWorks.Sales.OrderSummary", "entityType": "view",
+      "description": "Reporting view of sales orders", "owner": "Sales Analytics", "tags": [], "tier": "Tier1",
+      "columns": [
+        {"name": "SalesOrderID", "dataType": "INT", "nullable": false, "foreignKey": true},
+        {"name": "OrderTotal", "dataType": "DECIMAL", "nullable": false}
+      ]
     }
   ],
   "relationships": [
     {"id": "salesorderheader.CustomerID->customer.CustomerID", "sourceTableId": "salesorderheader", "sourceColumn": "CustomerID", "targetTableId": "customer", "targetColumn": "CustomerID"},
     {"id": "salesorderdetail.SalesOrderID->salesorderheader.SalesOrderID", "sourceTableId": "salesorderdetail", "sourceColumn": "SalesOrderID", "targetTableId": "salesorderheader", "targetColumn": "SalesOrderID"},
-    {"id": "salesorderdetail.ProductID->product.ProductID", "sourceTableId": "salesorderdetail", "sourceColumn": "ProductID", "targetTableId": "product", "targetColumn": "ProductID"}
+    {"id": "salesorderdetail.ProductID->product.ProductID", "sourceTableId": "salesorderdetail", "sourceColumn": "ProductID", "targetTableId": "product", "targetColumn": "ProductID"},
+    {"id": "ordersummary.SalesOrderID->salesorderheader.SalesOrderID", "sourceTableId": "ordersummary", "sourceColumn": "SalesOrderID", "targetTableId": "salesorderheader", "targetColumn": "SalesOrderID"}
   ],
   "warnings": ["OpenMetadata is unavailable; showing bundled AdventureWorks sample data."]
 }

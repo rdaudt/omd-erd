@@ -149,5 +149,6 @@ def test_first_graph_request_falls_back_when_sdk_version_probe_is_unavailable(mo
         assert response.status_code == 200
         assert response.json()['source'] == 'sample'
         assert response.json()['tables']
+        assert {table['entityType'] for table in response.json()['tables']} == {'table', 'view'}
         assert response.json()['warnings']
     assert len(attempts) == 2  # Failed initialization is retried, not cached forever.

@@ -19,13 +19,14 @@ def graph_column(name: str, data_type=DataType.INT):
     )
 
 
-def graph_table(table_id: str, name: str, fqn: str, columns, constraints=None, *, owners=None, tags=None):
+def graph_table(table_id: str, name: str, fqn: str, columns, constraints=None, *, owners=None, tags=None, table_type=None):
     table = entity(table_id, name, fqn)
     table.columns = columns
     table.tableConstraints = constraints
     table.description = None
     table.owners = SimpleNamespace(root=owners or [])
     table.tags = tags or []
+    table.tableType = table_type
     return table
 
 
@@ -57,6 +58,7 @@ def test_graph_normalizes_sdk_shaped_tables_and_foreign_keys(fake_reader):
     assert graph.source == "live"
     assert [table.name for table in graph.tables] == ["customer", "orders"]
     assert graph.tables[0].owner == "Data Architecture"
+    assert graph.tables[0].entityType == "table"
     assert graph.tables[0].tier == "Tier1"
     assert graph.tables[0].tags == ["PII.Sensitive"]
     assert graph.tables[0].columns[0].primaryKey is True
@@ -71,8 +73,28 @@ def test_graph_normalizes_sdk_shaped_tables_and_foreign_keys(fake_reader):
     }
     assert graph.warnings == []
     assert fake_reader.calls[0].fields == []
-    assert fake_reader.calls[1].fields == ["columns", "tableConstraints", "owners", "tags"]
+    assert fake_reader.calls[1].fields == ["columns", "tableConstraints", "owners", "tags", "tableType"]
     assert fake_reader.calls[1].params == {"databaseSchema": "svc.db.dbo", "limit": 100}
+
+@pytest.mark.parametrize("table_type", ["View", "SecureView", "MaterializedView"])
+def test_graph_classifies_openmetadata_view_types(fake_reader, table_type):
+    add_graph_schema(fake_reader, [
+        graph_table("report", "report", "svc.db.dbo.report", [], table_type=table_type),
+    ])
+
+    graph = CatalogService(fake_reader, cache_ttl_seconds=60).get_schema_graph("schema-1")
+
+    assert graph.tables[0].entityType == "view"
+
+@pytest.mark.parametrize("table_type", ["Regular", "External", "Iceberg", "Dynamic", None, "FutureType"])
+def test_graph_classifies_other_and_missing_types_as_tables(fake_reader, table_type):
+    add_graph_schema(fake_reader, [
+        graph_table("orders", "orders", "svc.db.dbo.orders", [], table_type=table_type),
+    ])
+
+    graph = CatalogService(fake_reader, cache_ttl_seconds=60).get_schema_graph("schema-1")
+
+    assert graph.tables[0].entityType == "table"
 
 
 @pytest.mark.parametrize(

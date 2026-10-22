@@ -78,7 +78,7 @@ export async function layoutGraph(graph: GraphResponse, collapsedIds: ReadonlySe
   const positions = new Map(result.children?.map((node) => [node.id, { x: node.x ?? 0, y: node.y ?? 0 }]));
   return {
     nodes: graph.tables.map((table) => ({
-      id: table.id, type: 'table', ariaLabel: `${table.name} table`, position: positions.get(table.id) ?? { x: 0, y: 0 },
+      id: table.id, type: 'table', ariaLabel: `${table.name} ${table.entityType}`, position: positions.get(table.id) ?? { x: 0, y: 0 },
       data: { table, collapsed: collapsedIds.has(table.id) },
       width: TABLE_WIDTH, dragHandle: '.table-node-header', deletable: false,
     })),

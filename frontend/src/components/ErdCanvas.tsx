@@ -10,7 +10,7 @@ import { RelationshipEdge } from './RelationshipEdge';
 import { TableNode } from './TableNode';
 
 export type CanvasDisplayState = {
-  hiddenTableIds: ReadonlySet<string>;
+  hiddenEntityIds: ReadonlySet<string>;
   disabled: boolean;
   onRestoreTable: (id: string) => void;
   onRestoreAll: () => void;
@@ -124,7 +124,7 @@ function Canvas({ graph, onSelectedTableChange, onDisplayStateChange }: ErdCanva
   const expandAll = useCallback(() => setView((previous) => ({ ...previous, collapsedIds: new Set<string>() })), []);
   const relayout = useCallback(() => setRevision((value) => value + 1), []);
   const displayState = useMemo<CanvasDisplayState>(() => ({
-    hiddenTableIds: view.hiddenIds, disabled: loading || graph.tables.length === 0,
+    hiddenEntityIds: view.hiddenIds, disabled: loading || graph.tables.length === 0,
     onRestoreTable: restoreTable, onRestoreAll: restoreAll, onCollapseAll: collapseAll, onExpandAll: expandAll, onRelayout: relayout,
   }), [view.hiddenIds, loading, graph.tables.length, restoreTable, restoreAll, collapseAll, expandAll, relayout]);
   useEffect(() => { onDisplayStateChange?.(displayState); }, [onDisplayStateChange, displayState]);

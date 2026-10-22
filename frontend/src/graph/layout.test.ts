@@ -11,7 +11,7 @@ vi.mock('elkjs/lib/elk.bundled.js', () => ({ default: class { layout = layout; }
 const graph: GraphResponse = {
   source: 'live', schema: { id: 'schema', name: 'schema', fullyQualifiedName: 'schema' }, warnings: [],
   tables: ['Orders', 'Customer'].map((name) => ({
-    id: name, name, fullyQualifiedName: name, description: null, owner: null, tags: [], tier: null,
+    id: name, name, fullyQualifiedName: name, entityType: 'table', description: null, owner: null, tags: [], tier: null,
     columns: ['id', 'customer_id'].map((column) => ({ name: column, dataType: 'INT', nullable: false, primaryKey: column === 'id', foreignKey: column === 'customer_id', description: null })),
   })),
   relationships: [{ id: 'fk', sourceTableId: 'Orders', sourceColumn: 'customer_id', targetTableId: 'Customer', targetColumn: 'id' }],

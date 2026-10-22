@@ -8,17 +8,25 @@ const graph: GraphResponse = {
   source: 'live', schema, warnings: [],
   tables: [
     {
-      id: 'customer', name: 'Customer', fullyQualifiedName: `${schema.fullyQualifiedName}.Customer`,
+      id: 'customer', name: 'Customer', fullyQualifiedName: `${schema.fullyQualifiedName}.Customer`, entityType: 'table',
       description: 'Customers who place orders.', owner: 'Data Architecture', tags: ['PII.Sensitive'], tier: 'Tier1',
       columns: [{ name: 'id', dataType: 'INT', nullable: false, primaryKey: true, foreignKey: false, description: 'Customer identifier.' }],
     },
     {
-      id: 'orders', name: 'Orders', fullyQualifiedName: `${schema.fullyQualifiedName}.Orders`,
+      id: 'orders', name: 'Orders', fullyQualifiedName: `${schema.fullyQualifiedName}.Orders`, entityType: 'table',
       description: null, owner: null, tags: [], tier: null,
       columns: [{ name: 'customer_id', dataType: 'INT', nullable: false, primaryKey: false, foreignKey: true, description: null }],
     },
+    {
+      id: 'order-summary', name: 'Order Summary', fullyQualifiedName: `${schema.fullyQualifiedName}.Order Summary`, entityType: 'view',
+      description: 'Order reporting view.', owner: 'Data Architecture', tags: [], tier: 'Tier1',
+      columns: [{ name: 'order_id', dataType: 'INT', nullable: false, primaryKey: false, foreignKey: true, description: null }],
+    },
   ],
-  relationships: [{ id: 'fk-orders-customer', sourceTableId: 'orders', sourceColumn: 'customer_id', targetTableId: 'customer', targetColumn: 'id' }],
+  relationships: [
+    { id: 'fk-orders-customer', sourceTableId: 'orders', sourceColumn: 'customer_id', targetTableId: 'customer', targetColumn: 'id' },
+    { id: 'fk-summary-orders', sourceTableId: 'order-summary', sourceColumn: 'order_id', targetTableId: 'orders', targetColumn: 'customer_id' },
+  ],
 };
 
 test('explores the catalog, manipulates the diagram, inspects metadata, and labels fallback', async ({ page }) => {
@@ -48,7 +56,17 @@ test('explores the catalog, manipulates the diagram, inspects metadata, and labe
   await page.goto('/');
   await selectSchema();
   const customer = page.getByRole('group', { name: 'Customer table', exact: true });
+  const summary = page.getByRole('group', { name: 'Order Summary view', exact: true });
   const relationship = page.getByRole('group', { name: 'Orders.customer_id references Customer.id', exact: true });
+  await expect(page.getByRole('radio', { name: 'Tables', exact: true })).toBeChecked();
+  await expect(summary).toHaveCount(0);
+  await page.getByText('Views', { exact: true }).click();
+  await expect(customer).toHaveCount(0);
+  await expect(summary).toBeVisible();
+  await page.getByText('Both', { exact: true }).click();
+  await expect(customer).toBeVisible();
+  await expect(summary).toBeVisible();
+  await page.getByText('Tables', { exact: true }).click();
   await expect(customer).toBeVisible();
   // Horizontal SVG paths have a zero-height bounding box, so assert that the
   // accessible rendered edge exists rather than relying on HTML visibility.

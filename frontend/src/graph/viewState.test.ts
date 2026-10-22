@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { GraphResponse, TableModel } from '../api/types';
 import { relatedIds, resetViewState, visibleGraph } from './viewState';
 
-const table = (id: string): TableModel => ({ id, name: id, fullyQualifiedName: id, description: null, owner: null, tags: [], tier: null, columns: [] });
+const table = (id: string): TableModel => ({ id, name: id, fullyQualifiedName: id, entityType: 'table', description: null, owner: null, tags: [], tier: null, columns: [] });
 const graph: GraphResponse = {
   source: 'live', schema: { id: 'schema', name: 'schema', fullyQualifiedName: 'schema' }, warnings: [],
   tables: ['a', 'b', 'c', 'd'].map(table),
