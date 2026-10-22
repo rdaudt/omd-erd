@@ -63,6 +63,13 @@ def test_hierarchy_routes_require_parent_query_parameters():
     assert client.get("/api/databases").status_code == 422
     assert client.get("/api/schemas").status_code == 422
 
+def test_parent_ids_reject_path_delimiters_before_catalog_access():
+    client = TestClient(create_app(StubCatalogService()))
+
+    response = client.get("/api/databases", params={"serviceId": "../../system/version"})
+
+    assert response.status_code == 422
+
 
 def test_unknown_parent_returns_404_without_exposing_identifier():
     client = TestClient(create_app(StubCatalogService()))

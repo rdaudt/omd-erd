@@ -46,8 +46,10 @@ export function App({ api = catalogApi }: AppProps) {
     api.getGraph(schemaId, false, request.signal)
       .then((result) => {
         if (!request.signal.aborted) {
-          setSelectedTable(null);
-          setDisplayState(null);
+          if (loadedSchemaId !== schemaId) {
+            setSelectedTable(null);
+            setDisplayState(null);
+          }
           setGraph(result);
           setLoadedSchemaId(schemaId);
         }

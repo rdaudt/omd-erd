@@ -1,5 +1,6 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import type { CatalogApi } from './api/client';
 import type { CatalogItem, GraphResponse } from './api/types';
@@ -9,7 +10,12 @@ import type { ErdCanvasProps } from './components/ErdCanvas';
 // Isolate App-owned selection from canvas effects so graph replacement is
 // verified even when an empty graph unmounts the canvas.
 vi.mock('./components/ErdCanvas', () => ({
-  ErdCanvas: ({ graph, onSelectedTableChange }: ErdCanvasProps) => <button onClick={() => onSelectedTableChange(graph.tables[0])}>Select first table</button>,
+  ErdCanvas: ({ graph, onSelectedTableChange }: ErdCanvasProps) => {
+    const [localState, setLocalState] = useState(false);
+    return <><button onClick={() => onSelectedTableChange(graph.tables[0])}>Select first table</button>
+      <button onClick={() => setLocalState((value) => !value)}>Toggle local canvas state</button>
+      <output aria-label="Local canvas state">{String(localState)}</output></>;
+  },
 }));
 
 const service: CatalogItem = { id: 'service', name: 'MSSQL Desktop', fullyQualifiedName: 'MSSQL Desktop' };
@@ -103,6 +109,23 @@ describe('App graph loading', () => {
     expect(screen.getByRole('region', { name: 'Diagram status' })).toBeInTheDocument();
     expect(screen.getByRole('status', { name: 'Data source' })).toHaveTextContent('Sample data');
     expect(screen.getByRole('status', { name: 'Diagram warnings' })).toHaveTextContent('One relationship was skipped');
+  });
+
+  it('resets canvas state when different requested schemas return the same sample graph', async () => {
+    const user = userEvent.setup();
+    const bundledSample = {
+      ...graph({ id: 'bundled-sample', name: 'Sample', fullyQualifiedName: 'Sample' }, 'sample'),
+      tables: [{ id: 'sample-table', name: 'Sample table', fullyQualifiedName: 'Sample.Sample table', description: null, owner: null, tags: [], tier: null, columns: [] }],
+    };
+    render(<App api={api(vi.fn(async () => bundledSample))} />);
+
+    await selectSchema(user, schemaOne);
+    await user.click(await screen.findByRole('button', { name: 'Toggle local canvas state' }));
+    expect(screen.getByLabelText('Local canvas state')).toHaveTextContent('true');
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Schema' }), schemaTwo.id);
+
+    await waitFor(() => expect(screen.getByLabelText('Local canvas state')).toHaveTextContent('false'));
   });
 
   it('shows a failed graph request without discarding the previous diagram', async () => {

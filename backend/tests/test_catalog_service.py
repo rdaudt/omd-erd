@@ -175,6 +175,36 @@ def test_graph_resolves_longest_qualified_table_prefix(fake_reader):
     assert graph.relationships[0].targetTableId == "customer_region"
     assert graph.warnings == []
 
+def test_graph_resolves_quoted_dotted_column_and_preserves_backslashes(fake_reader):
+    dotted_column = "customer.id"
+    backslash_column = r"path\\name"
+    customer = graph_table(
+        "customer", "customer", "svc.db.dbo.customer",
+        [graph_column(dotted_column), graph_column(backslash_column), graph_column("id")],
+    )
+    orders = graph_table(
+        "orders", "orders", "svc.db.dbo.orders", [graph_column("dotted_fk"), graph_column("path_fk"), graph_column("nested_fk")],
+        [TableConstraint(
+            constraintType=ConstraintType.FOREIGN_KEY,
+            columns=["dotted_fk", "path_fk", "nested_fk"],
+            referredColumns=[
+                'svc.db.dbo.customer."customer.id"',
+                r"svc.db.dbo.customer.path\\name",
+                "svc.db.dbo.customer.region.id",
+            ],
+        )],
+    )
+    add_graph_schema(fake_reader, [orders, customer])
+
+    graph = CatalogService(fake_reader, cache_ttl_seconds=60).get_schema_graph("schema-1")
+
+    assert [(edge.sourceColumn, edge.targetColumn) for edge in graph.relationships] == [
+        ("dotted_fk", dotted_column),
+        ("path_fk", backslash_column),
+    ]
+    assert len(graph.warnings) == 1
+    assert "nested_fk" in graph.warnings[0]
+
 
 def test_graph_empty_schema_is_live_and_empty(fake_reader):
     add_graph_schema(fake_reader, [])
