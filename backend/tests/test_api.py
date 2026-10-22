@@ -115,6 +115,16 @@ def test_graph_route_serializes_schema_alias_and_forwards_refresh():
     assert response.json()["warnings"]
     assert service.graph_request == ("schema-1", True)
 
+def test_graph_route_rejects_unsafe_schema_ids_before_service_access():
+    service = StubCatalogService()
+    client = TestClient(create_app(service))
+
+    for schema_id in ["bad id", r"bad\id", "x" * 129]:
+        response = client.get(f"/api/schemas/{schema_id}/graph")
+        assert response.status_code == 422
+
+    assert not hasattr(service, "graph_request")
+
 
 def test_all_catalog_routes_reject_post():
     client = TestClient(create_app(StubCatalogService()))
