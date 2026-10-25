@@ -9,8 +9,9 @@ from tools.glossary.writers import (
     write_relationships_csv,
 )
 
-HEADER = ["parent", "name", "displayName", "description", "synonyms", "relatedTerms",
-          "references", "tags", "reviewers", "owner", "glossaryStatus", "color"]
+HEADER = ["parent", "name*", "displayName", "description", "synonyms", "relatedTerms",
+          "references", "tags", "reviewers", "owner", "glossaryStatus", "color",
+          "iconURL", "domains", "extension"]
 G = GLOSSARY_NAME
 
 SALES = Term("Sales", None, "Approved", "Selling.")
@@ -43,7 +44,7 @@ def test_roots_precede_children_and_parent_is_fqn(tmp_path):
     out = tmp_path / "g.csv"
     write_glossary_csv([ORDER, SALES, CUSTOMER], out)
     rows = read(out)
-    assert [r["name"] for r in rows] == ["Sales", "Sales Order", "Customer"]
+    assert [r["name*"] for r in rows] == ["Sales", "Sales Order", "Customer"]
     assert rows[0]["parent"] == ""
     assert rows[1]["parent"] == f"{G}.Sales"
     assert rows[1]["displayName"] == "Sales Order"
@@ -107,7 +108,7 @@ def test_glossary_csv_without_related_terms_leaves_column_empty(tmp_path):
     out = tmp_path / "g.csv"
     write_glossary_csv([SALES, ORDER, CUSTOMER], out, include_related=False)
     assert all(r["relatedTerms"] == "" for r in read(out))
-    assert [r["name"] for r in read(out)] == ["Sales", "Sales Order", "Customer"]
+    assert [r["name*"] for r in read(out)] == ["Sales", "Sales Order", "Customer"]
 
 
 def test_mapping_marks_tables_without_omd_description_as_inferred(tmp_path):

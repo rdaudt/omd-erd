@@ -4,8 +4,10 @@ from pathlib import Path
 
 from tools.glossary.model import GLOSSARY_NAME, Term, object_fqn
 
-GLOSSARY_HEADER = ["parent", "name", "displayName", "description", "synonyms", "relatedTerms",
-                   "references", "tags", "reviewers", "owner", "glossaryStatus", "color"]
+# OMD 2.0.5 rejects the import unless the header matches exactly, including the `name*` marker.
+GLOSSARY_HEADER = ["parent", "name*", "displayName", "description", "synonyms", "relatedTerms",
+                   "references", "tags", "reviewers", "owner", "glossaryStatus", "color",
+                   "iconURL", "domains", "extension"]
 
 
 def _write(path: Path, header: list[str], rows: list[list[str]]) -> None:
@@ -22,7 +24,7 @@ def write_glossary_csv(terms: list[Term], path: Path, include_related: bool = Tr
         related = ";".join(f"{r['type']}:{GLOSSARY_NAME}.{r['term']}" for r in t.related) if include_related else ""
         parent = f"{GLOSSARY_NAME}.{t.parent}" if t.parent else ""
         rows.append([parent, t.name, t.name, t.description, ";".join(t.synonyms), related,
-                     "", "", "", "", t.status, ""])
+                     "", "", "", "", t.status, "", "", "", ""])
     _write(path, GLOSSARY_HEADER, rows)
 
 
