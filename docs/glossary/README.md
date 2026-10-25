@@ -25,6 +25,17 @@ metadata in OMD. Design: `docs/superpowers/specs/2026-10-24-adventureworks-gloss
 3. Import `adventureworks-glossary-relations.csv` (pass 2) the same way. It updates the existing terms with their related terms.
 4. Optional pre-check without importing anything: `.venv/Scripts/python.exe -m tools.glossary.build dry-run` (pass 1) once the empty glossary exists; after pass 1 is imported, `dry-run --file adventureworks-glossary-relations.csv` checks pass 2. Reads `OMD_HOST` and `OMD_TOKEN` from `.env`.
 
+## Tagging tables and columns with the terms
+
+`tools/glossary/apply.py` reads `term-object-mapping.csv` and adds each term as a glossary tag on its table or column. `basis=inferred` rows are tagged `Derived`, the rest `Manual`. It is idempotent: assignments already present are skipped. Dry run by default:
+
+```
+.venv/Scripts/python.exe -m tools.glossary.apply           # plan only: counts and problems
+.venv/Scripts/python.exe -m tools.glossary.apply --apply   # write the tags
+```
+
+It never removes tags. It refuses to write while the plan has problems (a missing table or column).
+
 ## How it is built
 
 Curated terms live in `tools/glossary/data/terms/*.json` (one file per domain), with curated relations in
