@@ -72,3 +72,21 @@ def test_dry_run_import_sends_put_with_text_plain_and_dry_run_flag():
     assert req.get_header("Content-type") == "text/plain"
     assert req.data == b"name\nA\n"
     assert result["numberOfRowsProcessed"] == 2
+
+
+def test_make_get_json_maps_timeout_and_bad_json_to_omd_error():
+    get_json = make_get_json("http://x/api", "secret-token")
+    with mock.patch("urllib.request.urlopen", side_effect=TimeoutError("timed out")):
+        with pytest.raises(OmdError):
+            get_json("/v1/tables")
+
+    class Bad:
+        def __enter__(self):
+            return io.BytesIO(b"<html>not json</html>")
+
+        def __exit__(self, *a):
+            return False
+
+    with mock.patch("urllib.request.urlopen", return_value=Bad()):
+        with pytest.raises(OmdError):
+            get_json("/v1/tables")

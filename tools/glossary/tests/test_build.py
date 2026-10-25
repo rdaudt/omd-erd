@@ -37,11 +37,12 @@ def test_build_writes_nothing_when_invalid(tmp_path):
     assert not out.exists() or not list(out.iterdir())
 
 
-def test_build_writes_three_csvs_when_valid(tmp_path):
+def test_build_writes_all_csvs_when_valid(tmp_path):
     opts, out = setup(tmp_path, GOOD)
     assert build.main(["build", *opts]) == 0
     assert sorted(p.name for p in out.iterdir()) == [
-        "adventureworks-glossary.csv", "term-object-mapping.csv", "term-relationships.csv"]
+        "adventureworks-glossary-relations.csv", "adventureworks-glossary.csv",
+        "term-object-mapping.csv", "term-relationships.csv"]
 
 
 def test_omd_error_prints_one_line_and_returns_2(tmp_path, monkeypatch, capsys):
@@ -78,3 +79,29 @@ def test_build_expands_curated_relationship_paths_to_fqns(tmp_path):
     assert build.main(["build", *opts]) == 0
     text = (out / "term-relationships.csv").read_text(encoding="utf-8")
     assert "AdventureWorks Business Glossary.Sales.Customer,buys from,AdventureWorks Business Glossary.Sales,rule,curated" in text
+
+
+def test_missing_token_gives_one_line_error(tmp_path, capsys):
+    env = tmp_path / ".env"
+    env.write_text("OMD_HOST=http://x/api\n", encoding="utf-8")
+    assert build.main(["snapshot", "--env", str(env), "--snapshot", str(tmp_path / "s.json")]) == 2
+    err = capsys.readouterr().err.strip()
+    assert err.startswith("error:") and "OMD_TOKEN" in err and "\n" not in err
+
+
+def test_missing_snapshot_gives_one_line_error(tmp_path, capsys):
+    opts, _ = setup(tmp_path, GOOD)
+    opts[3] = str(tmp_path / "nope.json")
+    assert build.main(["check", *opts]) == 2
+    err = capsys.readouterr().err.strip()
+    assert err.startswith("error:") and "nope.json" in err and "\n" not in err
+
+
+def test_build_writes_terms_file_without_relations_and_relations_file_with_them(tmp_path):
+    import csv
+    opts, out = setup(tmp_path, [ROOT, {**GOOD[1], "related": [{"type": "relatedTo", "term": "Sales"}]}])
+    assert build.main(["build", *opts]) == 0
+    first = list(csv.DictReader((out / "adventureworks-glossary.csv").open(encoding="utf-8")))
+    second = list(csv.DictReader((out / "adventureworks-glossary-relations.csv").open(encoding="utf-8")))
+    assert all(r["relatedTerms"] == "" for r in first)
+    assert second[1]["relatedTerms"].startswith("relatedTo:")

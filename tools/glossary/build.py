@@ -27,6 +27,7 @@ def _parser() -> argparse.ArgumentParser:
     p.add_argument("--snapshot", type=Path, default=DEFAULT_SNAPSHOT)
     p.add_argument("--out-dir", type=Path, default=DEFAULT_OUT)
     p.add_argument("--env", type=Path, default=ROOT / ".env")
+    p.add_argument("--file", default="adventureworks-glossary.csv", help="CSV in --out-dir for dry-run")
     p.add_argument("--schemas", help="comma-separated <db>.<schema> list limiting the coverage check")
     return p
 
@@ -69,8 +70,10 @@ def _build(args) -> int:
     curated = [{**r, "subject": f"{GLOSSARY_NAME}.{r['subject']}", "object": f"{GLOSSARY_NAME}.{r['object']}"}
                for r in _load_curated(args.data_dir)]
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    write_glossary_csv(terms, args.out_dir / "adventureworks-glossary.csv")
-    write_mapping_csv(terms, args.out_dir / "term-object-mapping.csv")
+    # Pass 1 creates every term; pass 2 repeats them with relatedTerms, which can then all resolve.
+    write_glossary_csv(terms, args.out_dir / "adventureworks-glossary.csv", include_related=False)
+    write_glossary_csv(terms, args.out_dir / "adventureworks-glossary-relations.csv")
+    write_mapping_csv(terms, args.out_dir / "term-object-mapping.csv", snapshot)
     write_relationships_csv(curated, derive_fk_relations(terms, snapshot),
                             args.out_dir / "term-relationships.csv")
     print(f"wrote files to {args.out_dir}")
@@ -79,7 +82,7 @@ def _build(args) -> int:
 
 def _dry_run(args) -> int:
     env = load_env(args.env)
-    csv_text = (args.out_dir / "adventureworks-glossary.csv").read_text(encoding="utf-8")
+    csv_text = (args.out_dir / args.file).read_text(encoding="utf-8")
     result = dry_run_import(env["OMD_HOST"], env["OMD_TOKEN"], GLOSSARY_NAME, csv_text)
     print(json.dumps({k: result.get(k) for k in
                       ("status", "numberOfRowsProcessed", "numberOfRowsPassed", "numberOfRowsFailed", "abortReason")}))
@@ -101,6 +104,12 @@ def main(argv: list[str] | None = None) -> int:
         return _build(args)
     except OmdError as exc:
         print(f"error: {exc}", file=sys.stderr)
+        return 2
+    except KeyError as exc:
+        print(f"error: missing setting or field {exc}", file=sys.stderr)
+        return 2
+    except (OSError, ValueError) as exc:
+        print(f"error: {str(exc).splitlines()[0] if str(exc) else type(exc).__name__}", file=sys.stderr)
         return 2
 
 

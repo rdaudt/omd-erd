@@ -36,6 +36,8 @@ def make_get_json(host: str, token: str) -> Callable[[str], dict]:
             raise OmdError(f"OMD returned HTTP {exc.code} for {path.split('?')[0]}") from None
         except urllib.error.URLError as exc:
             raise OmdError(f"Cannot reach OMD at {host}: {exc.reason}") from None
+        except (OSError, ValueError):
+            raise OmdError(f"Unreadable response from OMD for {path.split('?')[0]}") from None
 
     return get_json
 

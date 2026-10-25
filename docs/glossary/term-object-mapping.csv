@@ -1,27 +1,27 @@
 term_fqn,object_type,object_fqn,basis
-AdventureWorks Business Glossary.Analytics (Data Warehouse).Date Dimension,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimDate,name
-AdventureWorks Business Glossary.Analytics (Data Warehouse).Geography Dimension,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimGeography,name
-AdventureWorks Business Glossary.Analytics (Data Warehouse).Internet Sales Fact,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactInternetSales,name
-AdventureWorks Business Glossary.Analytics (Data Warehouse).Reseller Sales Fact,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactResellerSales,name
-AdventureWorks Business Glossary.Analytics (Data Warehouse).Call Center Fact,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactCallCenter,name
-AdventureWorks Business Glossary.Analytics (Data Warehouse).Survey Response Fact,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactSurveyResponse,name
-AdventureWorks Business Glossary.Analytics (Data Warehouse).Finance Fact,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactFinance,name
-AdventureWorks Business Glossary.Analytics (Data Warehouse).Account,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimAccount,name
-AdventureWorks Business Glossary.Analytics (Data Warehouse).Organization,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimOrganization,name
-AdventureWorks Business Glossary.Analytics (Data Warehouse).Department Group,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimDepartmentGroup,name
-AdventureWorks Business Glossary.Analytics (Data Warehouse).Scenario,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimScenario,name
-AdventureWorks Business Glossary.Analytics (Data Warehouse).Prospective Buyer,table,MSSQL Desktop.AdventureWorksDW2019.dbo.ProspectiveBuyer,name
-AdventureWorks Business Glossary.Analytics (Data Warehouse).Data Mining View,table,MSSQL Desktop.AdventureWorksDW2019.dbo.vAssocSeqLineItems,view
-AdventureWorks Business Glossary.Analytics (Data Warehouse).Data Mining View,table,MSSQL Desktop.AdventureWorksDW2019.dbo.vAssocSeqOrders,view
-AdventureWorks Business Glossary.Analytics (Data Warehouse).Data Mining View,table,MSSQL Desktop.AdventureWorksDW2019.dbo.vDMPrep,view
-AdventureWorks Business Glossary.Analytics (Data Warehouse).Data Mining View,table,MSSQL Desktop.AdventureWorksDW2019.dbo.vTargetMail,view
-AdventureWorks Business Glossary.Analytics (Data Warehouse).Data Mining View,table,MSSQL Desktop.AdventureWorksDW2019.dbo.vTimeSeries,view
+AdventureWorks Business Glossary.Analytics (Data Warehouse).Date Dimension,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimDate,inferred
+AdventureWorks Business Glossary.Analytics (Data Warehouse).Geography Dimension,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimGeography,inferred
+AdventureWorks Business Glossary.Analytics (Data Warehouse).Internet Sales Fact,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactInternetSales,inferred
+AdventureWorks Business Glossary.Analytics (Data Warehouse).Reseller Sales Fact,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactResellerSales,inferred
+AdventureWorks Business Glossary.Analytics (Data Warehouse).Call Center Fact,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactCallCenter,inferred
+AdventureWorks Business Glossary.Analytics (Data Warehouse).Survey Response Fact,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactSurveyResponse,inferred
+AdventureWorks Business Glossary.Analytics (Data Warehouse).Finance Fact,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactFinance,inferred
+AdventureWorks Business Glossary.Analytics (Data Warehouse).Account,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimAccount,inferred
+AdventureWorks Business Glossary.Analytics (Data Warehouse).Organization,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimOrganization,inferred
+AdventureWorks Business Glossary.Analytics (Data Warehouse).Department Group,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimDepartmentGroup,inferred
+AdventureWorks Business Glossary.Analytics (Data Warehouse).Scenario,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimScenario,inferred
+AdventureWorks Business Glossary.Analytics (Data Warehouse).Prospective Buyer,table,MSSQL Desktop.AdventureWorksDW2019.dbo.ProspectiveBuyer,inferred
+AdventureWorks Business Glossary.Analytics (Data Warehouse).Data Mining View,table,MSSQL Desktop.AdventureWorksDW2019.dbo.vAssocSeqLineItems,inferred
+AdventureWorks Business Glossary.Analytics (Data Warehouse).Data Mining View,table,MSSQL Desktop.AdventureWorksDW2019.dbo.vAssocSeqOrders,inferred
+AdventureWorks Business Glossary.Analytics (Data Warehouse).Data Mining View,table,MSSQL Desktop.AdventureWorksDW2019.dbo.vDMPrep,inferred
+AdventureWorks Business Glossary.Analytics (Data Warehouse).Data Mining View,table,MSSQL Desktop.AdventureWorksDW2019.dbo.vTargetMail,inferred
+AdventureWorks Business Glossary.Analytics (Data Warehouse).Data Mining View,table,MSSQL Desktop.AdventureWorksDW2019.dbo.vTimeSeries,inferred
 AdventureWorks Business Glossary.Human Resources.Employee,table,MSSQL Desktop.AdventureWorks2019.HumanResources.Employee,name
 AdventureWorks Business Glossary.Human Resources.Employee,table,MSSQL Desktop.AdventureWorks2019.HumanResources.vEmployee,name
-AdventureWorks Business Glossary.Human Resources.Employee,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimEmployee,name
-AdventureWorks Business Glossary.Human Resources.Employee,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimEmployeeCopy,name
+AdventureWorks Business Glossary.Human Resources.Employee,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimEmployee,inferred
+AdventureWorks Business Glossary.Human Resources.Employee,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimEmployeeCopy,inferred
 AdventureWorks Business Glossary.Human Resources.Department,table,MSSQL Desktop.AdventureWorks2019.HumanResources.Department,name
-AdventureWorks Business Glossary.Human Resources.Department,table,MSSQL Desktop.AdventureWorks2019.HumanResources.DepartmentTemp,name
+AdventureWorks Business Glossary.Human Resources.Department,table,MSSQL Desktop.AdventureWorks2019.HumanResources.DepartmentTemp,inferred
 AdventureWorks Business Glossary.Human Resources.Department Assignment,table,MSSQL Desktop.AdventureWorks2019.HumanResources.EmployeeDepartmentHistory,name
 AdventureWorks Business Glossary.Human Resources.Department Assignment,table,MSSQL Desktop.AdventureWorks2019.HumanResources.vEmployeeDepartment,name
 AdventureWorks Business Glossary.Human Resources.Department Assignment,table,MSSQL Desktop.AdventureWorks2019.HumanResources.vEmployeeDepartmentHistory,name
@@ -33,7 +33,7 @@ AdventureWorks Business Glossary.Human Resources.Job Candidate,table,MSSQL Deskt
 AdventureWorks Business Glossary.Human Resources.Job Candidate,table,MSSQL Desktop.AdventureWorks2019.HumanResources.vJobCandidateEmployment,name
 AdventureWorks Business Glossary.People and Contacts.Person,table,MSSQL Desktop.AdventureWorks2019.Person.Person,name
 AdventureWorks Business Glossary.People and Contacts.Person,table,MSSQL Desktop.AdventureWorks2019.Person.vAdditionalContactInfo,name
-AdventureWorks Business Glossary.People and Contacts.Person,table,MSSQL Desktop.AdventureWorks2019.dbo.Person,name
+AdventureWorks Business Glossary.People and Contacts.Person,table,MSSQL Desktop.AdventureWorks2019.dbo.Person,inferred
 AdventureWorks Business Glossary.People and Contacts.Business Entity,table,MSSQL Desktop.AdventureWorks2019.Person.BusinessEntity,name
 AdventureWorks Business Glossary.People and Contacts.Business Contact,table,MSSQL Desktop.AdventureWorks2019.Person.BusinessEntityContact,name
 AdventureWorks Business Glossary.People and Contacts.Business Contact,table,MSSQL Desktop.AdventureWorks2019.Person.ContactType,name
@@ -49,25 +49,25 @@ AdventureWorks Business Glossary.People and Contacts.State or Province,table,MSS
 AdventureWorks Business Glossary.People and Contacts.State or Province,table,MSSQL Desktop.AdventureWorks2019.Person.vStateProvinceCountryRegion,name
 AdventureWorks Business Glossary.Production.Product,table,MSSQL Desktop.AdventureWorks2019.Production.Product,name
 AdventureWorks Business Glossary.Production.Product,table,MSSQL Desktop.AdventureWorks2019.Production.vProductAndDescription,name
-AdventureWorks Business Glossary.Production.Product,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimProduct,name
+AdventureWorks Business Glossary.Production.Product,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimProduct,inferred
 AdventureWorks Business Glossary.Production.Product Category,table,MSSQL Desktop.AdventureWorks2019.Production.ProductCategory,name
-AdventureWorks Business Glossary.Production.Product Category,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimProductCategory,name
+AdventureWorks Business Glossary.Production.Product Category,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimProductCategory,inferred
 AdventureWorks Business Glossary.Production.Product Subcategory,table,MSSQL Desktop.AdventureWorks2019.Production.ProductSubcategory,name
-AdventureWorks Business Glossary.Production.Product Subcategory,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimProductSubcategory,name
+AdventureWorks Business Glossary.Production.Product Subcategory,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimProductSubcategory,inferred
 AdventureWorks Business Glossary.Production.Product Model,table,MSSQL Desktop.AdventureWorks2019.Production.ProductModel,name
 AdventureWorks Business Glossary.Production.Product Model,table,MSSQL Desktop.AdventureWorks2019.Production.vProductModelCatalogDescription,name
 AdventureWorks Business Glossary.Production.Product Model,table,MSSQL Desktop.AdventureWorks2019.Production.vProductModelInstructions,name
 AdventureWorks Business Glossary.Production.Product Description,table,MSSQL Desktop.AdventureWorks2019.Production.ProductDescription,name
 AdventureWorks Business Glossary.Production.Product Description,table,MSSQL Desktop.AdventureWorks2019.Production.ProductModelProductDescriptionCulture,name
 AdventureWorks Business Glossary.Production.Product Description,table,MSSQL Desktop.AdventureWorks2019.Production.Culture,name
-AdventureWorks Business Glossary.Production.Product Description,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactAdditionalInternationalProductDescription,name
+AdventureWorks Business Glossary.Production.Product Description,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactAdditionalInternationalProductDescription,inferred
 AdventureWorks Business Glossary.Production.Bill of Materials,table,MSSQL Desktop.AdventureWorks2019.Production.BillOfMaterials,name
 AdventureWorks Business Glossary.Production.Work Order,table,MSSQL Desktop.AdventureWorks2019.Production.WorkOrder,name
 AdventureWorks Business Glossary.Production.Work Order,table,MSSQL Desktop.AdventureWorks2019.Production.WorkOrderRouting,name
 AdventureWorks Business Glossary.Production.Scrap Reason,table,MSSQL Desktop.AdventureWorks2019.Production.ScrapReason,name
 AdventureWorks Business Glossary.Production.Inventory Location,table,MSSQL Desktop.AdventureWorks2019.Production.Location,name
 AdventureWorks Business Glossary.Production.Product Inventory,table,MSSQL Desktop.AdventureWorks2019.Production.ProductInventory,name
-AdventureWorks Business Glossary.Production.Product Inventory,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactProductInventory,name
+AdventureWorks Business Glossary.Production.Product Inventory,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactProductInventory,inferred
 AdventureWorks Business Glossary.Production.Inventory Transaction,table,MSSQL Desktop.AdventureWorks2019.Production.TransactionHistory,name
 AdventureWorks Business Glossary.Production.Inventory Transaction,table,MSSQL Desktop.AdventureWorks2019.Production.TransactionHistoryArchive,name
 AdventureWorks Business Glossary.Production.Product Cost History,table,MSSQL Desktop.AdventureWorks2019.Production.ProductCostHistory,name
@@ -92,34 +92,34 @@ AdventureWorks Business Glossary.Sales.Sales Order Line,table,MSSQL Desktop.Adve
 AdventureWorks Business Glossary.Sales.Customer,table,MSSQL Desktop.AdventureWorks2019.Sales.Customer,name
 AdventureWorks Business Glossary.Sales.Customer,table,MSSQL Desktop.AdventureWorks2019.Sales.vIndividualCustomer,name
 AdventureWorks Business Glossary.Sales.Customer,table,MSSQL Desktop.AdventureWorks2019.Sales.vPersonDemographics,name
-AdventureWorks Business Glossary.Sales.Customer,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimCustomer,name
+AdventureWorks Business Glossary.Sales.Customer,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimCustomer,inferred
 AdventureWorks Business Glossary.Sales.Reseller Store,table,MSSQL Desktop.AdventureWorks2019.Sales.Store,name
 AdventureWorks Business Glossary.Sales.Reseller Store,table,MSSQL Desktop.AdventureWorks2019.Sales.vStoreWithAddresses,name
 AdventureWorks Business Glossary.Sales.Reseller Store,table,MSSQL Desktop.AdventureWorks2019.Sales.vStoreWithContacts,name
 AdventureWorks Business Glossary.Sales.Reseller Store,table,MSSQL Desktop.AdventureWorks2019.Sales.vStoreWithDemographics,name
-AdventureWorks Business Glossary.Sales.Reseller Store,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimReseller,name
+AdventureWorks Business Glossary.Sales.Reseller Store,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimReseller,inferred
 AdventureWorks Business Glossary.Sales.Sales Person,table,MSSQL Desktop.AdventureWorks2019.Sales.SalesPerson,name
 AdventureWorks Business Glossary.Sales.Sales Person,table,MSSQL Desktop.AdventureWorks2019.Sales.vSalesPerson,name
 AdventureWorks Business Glossary.Sales.Sales Person,table,MSSQL Desktop.AdventureWorks2019.Sales.vSalesPersonSalesByFiscalYears,name
 AdventureWorks Business Glossary.Sales.Sales Quota,table,MSSQL Desktop.AdventureWorks2019.Sales.SalesPersonQuotaHistory,name
-AdventureWorks Business Glossary.Sales.Sales Quota,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactSalesQuota,name
+AdventureWorks Business Glossary.Sales.Sales Quota,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactSalesQuota,inferred
 AdventureWorks Business Glossary.Sales.Sales Territory,table,MSSQL Desktop.AdventureWorks2019.Sales.SalesTerritory,name
 AdventureWorks Business Glossary.Sales.Sales Territory,table,MSSQL Desktop.AdventureWorks2019.Sales.SalesTerritoryHistory,name
-AdventureWorks Business Glossary.Sales.Sales Territory,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimSalesTerritory,name
+AdventureWorks Business Glossary.Sales.Sales Territory,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimSalesTerritory,inferred
 AdventureWorks Business Glossary.Sales.Sales Reason,table,MSSQL Desktop.AdventureWorks2019.Sales.SalesReason,name
 AdventureWorks Business Glossary.Sales.Sales Reason,table,MSSQL Desktop.AdventureWorks2019.Sales.SalesOrderHeaderSalesReason,name
-AdventureWorks Business Glossary.Sales.Sales Reason,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimSalesReason,name
-AdventureWorks Business Glossary.Sales.Sales Reason,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactInternetSalesReason,name
+AdventureWorks Business Glossary.Sales.Sales Reason,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimSalesReason,inferred
+AdventureWorks Business Glossary.Sales.Sales Reason,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactInternetSalesReason,inferred
 AdventureWorks Business Glossary.Sales.Special Offer,table,MSSQL Desktop.AdventureWorks2019.Sales.SpecialOffer,name
 AdventureWorks Business Glossary.Sales.Special Offer,table,MSSQL Desktop.AdventureWorks2019.Sales.SpecialOfferProduct,name
-AdventureWorks Business Glossary.Sales.Special Offer,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimPromotion,name
+AdventureWorks Business Glossary.Sales.Special Offer,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimPromotion,inferred
 AdventureWorks Business Glossary.Sales.Sales Tax Rate,table,MSSQL Desktop.AdventureWorks2019.Sales.SalesTaxRate,name
 AdventureWorks Business Glossary.Sales.Currency,table,MSSQL Desktop.AdventureWorks2019.Sales.Currency,name
 AdventureWorks Business Glossary.Sales.Currency,table,MSSQL Desktop.AdventureWorks2019.Sales.CountryRegionCurrency,name
-AdventureWorks Business Glossary.Sales.Currency,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimCurrency,name
+AdventureWorks Business Glossary.Sales.Currency,table,MSSQL Desktop.AdventureWorksDW2019.dbo.DimCurrency,inferred
 AdventureWorks Business Glossary.Sales.Currency Exchange Rate,table,MSSQL Desktop.AdventureWorks2019.Sales.CurrencyRate,name
-AdventureWorks Business Glossary.Sales.Currency Exchange Rate,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactCurrencyRate,name
-AdventureWorks Business Glossary.Sales.Currency Exchange Rate,table,MSSQL Desktop.AdventureWorksDW2019.dbo.NewFactCurrencyRate,name
+AdventureWorks Business Glossary.Sales.Currency Exchange Rate,table,MSSQL Desktop.AdventureWorksDW2019.dbo.FactCurrencyRate,inferred
+AdventureWorks Business Glossary.Sales.Currency Exchange Rate,table,MSSQL Desktop.AdventureWorksDW2019.dbo.NewFactCurrencyRate,inferred
 AdventureWorks Business Glossary.Sales.Credit Card,table,MSSQL Desktop.AdventureWorks2019.Sales.CreditCard,name
 AdventureWorks Business Glossary.Sales.Credit Card,table,MSSQL Desktop.AdventureWorks2019.Sales.PersonCreditCard,name
 AdventureWorks Business Glossary.Sales.Shopping Cart Item,table,MSSQL Desktop.AdventureWorks2019.Sales.ShoppingCartItem,name

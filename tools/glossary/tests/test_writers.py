@@ -101,3 +101,21 @@ def test_curated_relation_overrides_derived(tmp_path):
     write_relationships_csv(curated, derived, out)
     rows = read(out)
     assert [(r["relation"], r["source"]) for r in rows] == [("placed by", "curated")]
+
+
+def test_glossary_csv_without_related_terms_leaves_column_empty(tmp_path):
+    out = tmp_path / "g.csv"
+    write_glossary_csv([SALES, ORDER, CUSTOMER], out, include_related=False)
+    assert all(r["relatedTerms"] == "" for r in read(out))
+    assert [r["name"] for r in read(out)] == ["Sales", "Sales Order", "Customer"]
+
+
+def test_mapping_marks_tables_without_omd_description_as_inferred(tmp_path):
+    snapshot = {"service": "MSSQL Desktop", "databases": {"AdventureWorks2019": [
+        {"fullyQualifiedName": "MSSQL Desktop.AdventureWorks2019.Sales.SalesOrderHeader", "description": "General sales order information."},
+        {"fullyQualifiedName": "MSSQL Desktop.AdventureWorks2019.Sales.Customer"}]}}
+    two = Term("Sales Order", "Sales", "Approved", "o", basis="name", objects=[
+        "AdventureWorks2019.Sales.SalesOrderHeader", "AdventureWorks2019.Sales.Customer"])
+    out = tmp_path / "m.csv"
+    write_mapping_csv([two], out, snapshot)
+    assert [r["basis"] for r in read(out)] == ["name", "inferred"]
