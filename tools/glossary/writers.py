@@ -1,0 +1,67 @@
+"""CSV writers for the glossary upload, object mapping and term relationships."""
+import csv
+from pathlib import Path
+
+from tools.glossary.model import GLOSSARY_NAME, Term, object_fqn
+
+GLOSSARY_HEADER = ["parent", "name", "displayName", "description", "synonyms", "relatedTerms",
+                   "references", "tags", "reviewers", "owner", "glossaryStatus", "color"]
+
+
+def _write(path: Path, header: list[str], rows: list[list[str]]) -> None:
+    with path.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.writer(f, lineterminator="\n")
+        writer.writerow(header)
+        writer.writerows(rows)
+
+
+def write_glossary_csv(terms: list[Term], path: Path) -> None:
+    ordered = sorted(terms, key=lambda t: t.parent is not None)  # stable: roots first
+    rows = []
+    for t in ordered:
+        related = ";".join(f"{r['type']}:{GLOSSARY_NAME}.{r['term']}" for r in t.related)
+        parent = f"{GLOSSARY_NAME}.{t.parent}" if t.parent else ""
+        rows.append([parent, t.name, t.name, t.description, ";".join(t.synonyms), related,
+                     "", "", "", "", t.status, ""])
+    _write(path, GLOSSARY_HEADER, rows)
+
+
+def write_mapping_csv(terms: list[Term], path: Path) -> None:
+    rows = []
+    for t in terms:
+        rows += [[t.fqn, "table", object_fqn(o), t.basis] for o in t.objects]
+        rows += [[t.fqn, "column", object_fqn(c), t.basis] for c in t.columns]
+    _write(path, ["term_fqn", "object_type", "object_fqn", "basis"], rows)
+
+
+def derive_fk_relations(terms: list[Term], snapshot: dict) -> list[dict]:
+    prefix = snapshot["service"] + "."
+    by_table: dict[str, list[Term]] = {}
+    for t in terms:
+        for o in t.objects:
+            by_table.setdefault(prefix + o, []).append(t)
+
+    found: dict[tuple[str, str], dict] = {}
+    for tables in snapshot["databases"].values():
+        for table in tables:
+            source = table["fullyQualifiedName"]
+            for con in table.get("tableConstraints", []):
+                if con.get("constraintType") != "FOREIGN_KEY":
+                    continue
+                for column, referred in zip(con["columns"], con["referredColumns"]):
+                    target = referred.rsplit(".", 1)[0]
+                    for s in by_table.get(source, []):
+                        for o in by_table.get(target, []):
+                            if s.fqn != o.fqn:
+                                found.setdefault((s.fqn, o.fqn), {
+                                    "subject": s.fqn, "relation": "references", "object": o.fqn,
+                                    "evidence": f"fk: {source}.{column} -> {referred}"})
+    return list(found.values())
+
+
+def write_relationships_csv(curated: list[dict], derived: list[dict], path: Path) -> None:
+    covered = {(r["subject"], r["object"]) for r in curated}
+    rows = [[r["subject"], r["relation"], r["object"], r.get("evidence", ""), "curated"] for r in curated]
+    rows += [[r["subject"], r["relation"], r["object"], r["evidence"], "fk"]
+             for r in derived if (r["subject"], r["object"]) not in covered]
+    _write(path, ["subject", "relation", "object", "evidence", "source"], rows)
