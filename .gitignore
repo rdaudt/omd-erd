@@ -29,3 +29,6 @@ output/playwright/
 .DS_Store
 Thumbs.db
 
+
+# Glossary tooling snapshot cache
+tools/glossary/.cache/
