@@ -1,0 +1,8 @@
+{
+  "AdventureWorks2019.dbo.DatabaseLog": "technical audit log of schema changes",
+  "AdventureWorks2019.dbo.ErrorLog": "technical error log",
+  "AdventureWorks2019.dbo.AWBuildVersion": "sample database build metadata",
+  "AdventureWorksDW2019.dbo.DatabaseLog": "technical audit log of schema changes",
+  "AdventureWorksDW2019.dbo.sysdiagrams": "SQL Server diagram storage",
+  "AdventureWorksDW2019.dbo.AdventureWorksDWBuildVersion": "sample database build metadata"
+}
