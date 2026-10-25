@@ -45,3 +45,30 @@ def test_make_get_json_maps_401_to_omd_error_without_token():
             get_json("/v1/tables")
     assert "secret-token" not in str(exc.value)
     assert "401" in str(exc.value)
+
+
+def test_dry_run_import_sends_put_with_text_plain_and_dry_run_flag():
+    from tools.glossary.omd_client import dry_run_import
+
+    captured = {}
+
+    class Resp:
+        def __enter__(self):
+            return io.BytesIO(b'{"status": "success", "numberOfRowsProcessed": 2}')
+
+        def __exit__(self, *a):
+            return False
+
+    def fake_urlopen(request, timeout=None):
+        captured["request"] = request
+        return Resp()
+
+    with mock.patch("urllib.request.urlopen", fake_urlopen):
+        result = dry_run_import("http://x/api", "tok", "My Glossary", "name\nA\n")
+
+    req = captured["request"]
+    assert req.get_method() == "PUT"
+    assert req.full_url == "http://x/api/v1/glossaries/name/My%20Glossary/import?dryRun=true"
+    assert req.get_header("Content-type") == "text/plain"
+    assert req.data == b"name\nA\n"
+    assert result["numberOfRowsProcessed"] == 2

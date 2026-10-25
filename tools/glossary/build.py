@@ -5,7 +5,8 @@ import sys
 from pathlib import Path
 
 from tools.glossary.model import load_exclusions, load_terms, validate
-from tools.glossary.omd_client import OmdError, fetch_snapshot, load_env, make_get_json
+from tools.glossary.model import GLOSSARY_NAME
+from tools.glossary.omd_client import OmdError, dry_run_import, fetch_snapshot, load_env, make_get_json
 from tools.glossary.writers import (
     derive_fk_relations,
     write_glossary_csv,
@@ -21,7 +22,7 @@ DEFAULT_OUT = ROOT / "docs" / "glossary"
 
 def _parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="tools.glossary.build")
-    p.add_argument("command", choices=["snapshot", "check", "build"])
+    p.add_argument("command", choices=["snapshot", "check", "build", "dry-run"])
     p.add_argument("--data-dir", type=Path, default=DEFAULT_DATA)
     p.add_argument("--snapshot", type=Path, default=DEFAULT_SNAPSHOT)
     p.add_argument("--out-dir", type=Path, default=DEFAULT_OUT)
@@ -40,11 +41,21 @@ def _snapshot(args) -> int:
     return 0
 
 
+def _load_curated(data_dir: Path) -> list[dict]:
+    path = data_dir / "relationships.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
+
+
 def _check(args) -> tuple[int, list, dict]:
     snapshot = json.loads(args.snapshot.read_text(encoding="utf-8"))
     terms = load_terms(args.data_dir)
     schemas = set(args.schemas.split(",")) if args.schemas else None
     errors = validate(terms, snapshot, load_exclusions(args.data_dir), schemas)
+    paths = {t.path for t in terms}
+    for rel in _load_curated(args.data_dir):
+        for end in (rel["subject"], rel["object"]):
+            if end not in paths:
+                errors.append(f"relationship {rel['subject']!r} {rel['relation']!r} {rel['object']!r}: unknown term {end!r}")
     for e in errors:
         print(e)
     print(f"{len(terms)} terms, {len(errors)} errors")
@@ -55,8 +66,8 @@ def _build(args) -> int:
     code, terms, snapshot = _check(args)
     if code:
         return code
-    rel_path = args.data_dir / "relationships.json"
-    curated = json.loads(rel_path.read_text(encoding="utf-8")) if rel_path.exists() else []
+    curated = [{**r, "subject": f"{GLOSSARY_NAME}.{r['subject']}", "object": f"{GLOSSARY_NAME}.{r['object']}"}
+               for r in _load_curated(args.data_dir)]
     args.out_dir.mkdir(parents=True, exist_ok=True)
     write_glossary_csv(terms, args.out_dir / "adventureworks-glossary.csv")
     write_mapping_csv(terms, args.out_dir / "term-object-mapping.csv")
@@ -66,6 +77,18 @@ def _build(args) -> int:
     return 0
 
 
+def _dry_run(args) -> int:
+    env = load_env(args.env)
+    csv_text = (args.out_dir / "adventureworks-glossary.csv").read_text(encoding="utf-8")
+    result = dry_run_import(env["OMD_HOST"], env["OMD_TOKEN"], GLOSSARY_NAME, csv_text)
+    print(json.dumps({k: result.get(k) for k in
+                      ("status", "numberOfRowsProcessed", "numberOfRowsPassed", "numberOfRowsFailed", "abortReason")}))
+    for line in (result.get("importResultsCsv") or "").splitlines():
+        if ",failure," in line or ",failed," in line.lower():
+            print(line)
+    return 0 if result.get("numberOfRowsFailed", 0) == 0 and result.get("status") != "aborted" else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
@@ -73,6 +96,8 @@ def main(argv: list[str] | None = None) -> int:
             return _snapshot(args)
         if args.command == "check":
             return _check(args)[0]
+        if args.command == "dry-run":
+            return _dry_run(args)
         return _build(args)
     except OmdError as exc:
         print(f"error: {exc}", file=sys.stderr)

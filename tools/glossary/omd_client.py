@@ -55,3 +55,18 @@ def fetch_snapshot(get_json: Callable[[str], dict]) -> dict:
                 break
         databases[db] = tables
     return {"service": SERVICE, "databases": databases}
+
+
+def dry_run_import(host: str, token: str, glossary: str, csv_text: str) -> dict:
+    """Validate a glossary CSV against an existing glossary without importing it."""
+    url = f"{host}/v1/glossaries/name/{urllib.parse.quote(glossary)}/import?dryRun=true"
+    request = urllib.request.Request(
+        url, data=csv_text.encode("utf-8"), method="PUT",
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "text/plain"})
+    try:
+        with urllib.request.urlopen(request, timeout=120) as response:
+            return json.load(response)
+    except urllib.error.HTTPError as exc:
+        raise OmdError(f"OMD returned HTTP {exc.code} for the dry-run import") from None
+    except urllib.error.URLError as exc:
+        raise OmdError(f"Cannot reach OMD at {host}: {exc.reason}") from None
