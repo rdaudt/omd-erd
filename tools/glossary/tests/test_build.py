@@ -99,9 +99,9 @@ def test_missing_snapshot_gives_one_line_error(tmp_path, capsys):
 
 def test_build_writes_terms_file_without_relations_and_relations_file_with_them(tmp_path):
     import csv
-    opts, out = setup(tmp_path, [ROOT, {**GOOD[1], "related": [{"type": "relatedTo", "term": "Sales"}]}])
+    opts, out = setup(tmp_path, [{**ROOT, "related": [{"type": "relatedTo", "term": "Sales.Customer"}]}, GOOD[1]])
     assert build.main(["build", *opts]) == 0
     first = list(csv.DictReader((out / "adventureworks-glossary.csv").open(encoding="utf-8")))
     second = list(csv.DictReader((out / "adventureworks-glossary-relations.csv").open(encoding="utf-8")))
     assert all(r["relatedTerms"] == "" for r in first)
-    assert second[1]["relatedTerms"].startswith("relatedTo:")
+    assert second[0]["relatedTerms"].startswith("relatedTo:")

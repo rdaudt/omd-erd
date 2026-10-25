@@ -120,3 +120,12 @@ def test_mapping_marks_tables_without_omd_description_as_inferred(tmp_path):
     out = tmp_path / "m.csv"
     write_mapping_csv([two], out, snapshot)
     assert [r["basis"] for r in read(out)] == ["name", "inferred"]
+
+
+def test_related_terms_only_point_at_rows_later_in_the_file(tmp_path):
+    # OMD's import fails with "Entity not found" when a row relates to a term already updated earlier in the same file.
+    cust = Term("Customer", "Sales", "Draft", "A buyer.", related=[{"type": "relatedTo", "term": "Sales.Sales Order"}])
+    order = Term("Sales Order", "Sales", "Approved", "An order.", related=[{"type": "relatedTo", "term": "Sales.Customer"}])
+    out = tmp_path / "g.csv"
+    write_glossary_csv([SALES, cust, order], out)
+    assert [r["relatedTerms"] for r in read(out)] == ["", f"relatedTo:{G}.Sales.Sales Order", ""]

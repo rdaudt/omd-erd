@@ -19,9 +19,13 @@ def _write(path: Path, header: list[str], rows: list[list[str]]) -> None:
 
 def write_glossary_csv(terms: list[Term], path: Path, include_related: bool = True) -> None:
     ordered = sorted(terms, key=lambda t: t.parent is not None)  # stable: roots first
+    # OMD's import fails ("Entity not found") when a row relates to a term updated earlier in the same file,
+    # so each link is written once, on the earlier row; OMD mirrors it on the other term.
+    position = {t.path: i for i, t in enumerate(ordered)}
     rows = []
-    for t in ordered:
-        related = ";".join(f"{r['type']}:{GLOSSARY_NAME}.{r['term']}" for r in t.related) if include_related else ""
+    for i, t in enumerate(ordered):
+        forward = [r for r in t.related if position[r["term"]] > i]
+        related = ";".join(f"{r['type']}:{GLOSSARY_NAME}.{r['term']}" for r in forward) if include_related else ""
         parent = f"{GLOSSARY_NAME}.{t.parent}" if t.parent else ""
         rows.append([parent, t.name, t.name, t.description, ";".join(t.synonyms), related,
                      "", "", "", "", t.status, "", "", "", ""])
