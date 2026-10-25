@@ -132,3 +132,8 @@ def test_load_terms_and_exclusions(tmp_path: Path):
     assert loaded[0].fqn == "AdventureWorks Business Glossary.Sales"
     assert loaded[0].objects == []
     assert load_exclusions(tmp_path) == {"A.b.c": "why"}
+
+
+def test_abstract_term_may_have_no_objects():
+    concept = replace(ORDER, name="Concept", objects=[], abstract=True)
+    assert errors(terms() + [concept]) == []

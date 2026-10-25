@@ -6,17 +6,17 @@
    "synonyms": ["Item", "SKU"],
    "description": "An item sold by Adventure Works, or used in the manufacture of items it sells. A product belongs to a subcategory and a product model and has a unit of measure.",
    "related": [{"type": "relatedTo", "term": "Production.Product Subcategory"}, {"type": "relatedTo", "term": "Production.Product Model"}, {"type": "relatedTo", "term": "Production.Unit of Measure"}, {"type": "relatedTo", "term": "Production.Bill of Materials"}],
-   "objects": ["AdventureWorks2019.Production.Product", "AdventureWorks2019.Production.vProductAndDescription"]},
+   "objects": ["AdventureWorks2019.Production.Product", "AdventureWorks2019.Production.vProductAndDescription", "AdventureWorksDW2019.dbo.DimProduct"]},
 
   {"name": "Product Category", "parent": "Production", "status": "Approved", "basis": "name",
    "description": "The high-level classification of products, such as bikes, components, clothing and accessories.",
    "related": [{"type": "hasPart", "term": "Production.Product Subcategory"}],
-   "objects": ["AdventureWorks2019.Production.ProductCategory"]},
+   "objects": ["AdventureWorks2019.Production.ProductCategory", "AdventureWorksDW2019.dbo.DimProductCategory"]},
 
   {"name": "Product Subcategory", "parent": "Production", "status": "Approved", "basis": "name",
    "description": "A finer classification of products within a product category.",
    "related": [{"type": "partOf", "term": "Production.Product Category"}, {"type": "relatedTo", "term": "Production.Product"}],
-   "objects": ["AdventureWorks2019.Production.ProductSubcategory"]},
+   "objects": ["AdventureWorks2019.Production.ProductSubcategory", "AdventureWorksDW2019.dbo.DimProductSubcategory"]},
 
   {"name": "Product Model", "parent": "Production", "status": "Approved", "basis": "name",
    "description": "A product model classification: the design that one or more products are built to, with its catalog description and manufacturing instructions.",
@@ -26,7 +26,7 @@
   {"name": "Product Description", "parent": "Production", "status": "Approved", "basis": "name",
    "description": "The descriptive text of a product model, available in several languages (cultures).",
    "related": [{"type": "relatedTo", "term": "Production.Product Model"}],
-   "objects": ["AdventureWorks2019.Production.ProductDescription", "AdventureWorks2019.Production.ProductModelProductDescriptionCulture", "AdventureWorks2019.Production.Culture"]},
+   "objects": ["AdventureWorks2019.Production.ProductDescription", "AdventureWorks2019.Production.ProductModelProductDescriptionCulture", "AdventureWorks2019.Production.Culture", "AdventureWorksDW2019.dbo.FactAdditionalInternationalProductDescription"]},
 
   {"name": "Bill of Materials", "parent": "Production", "status": "Approved", "basis": "name",
    "synonyms": ["BOM"],
@@ -55,7 +55,7 @@
    "synonyms": ["Stock on Hand"],
    "description": "The quantity of a product held at a given inventory location.",
    "related": [{"type": "relatedTo", "term": "Production.Product"}, {"type": "relatedTo", "term": "Production.Inventory Location"}],
-   "objects": ["AdventureWorks2019.Production.ProductInventory"]},
+   "objects": ["AdventureWorks2019.Production.ProductInventory", "AdventureWorksDW2019.dbo.FactProductInventory"]},
 
   {"name": "Inventory Transaction", "parent": "Production", "status": "Approved", "basis": "name",
    "synonyms": ["Transaction History"],

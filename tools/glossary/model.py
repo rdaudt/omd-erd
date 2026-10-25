@@ -21,6 +21,7 @@ class Term:
     objects: list[str] = field(default_factory=list)
     columns: list[str] = field(default_factory=list)
     basis: str = "name"
+    abstract: bool = False  # concept with no table of its own
 
     @property
     def path(self) -> str:
@@ -79,7 +80,7 @@ def validate(terms, snapshot, exclusions, schemas=None) -> list[str]:
                 errs.append(f"{label}: parent {t.parent!r} does not exist")
             elif t.parent not in roots:
                 errs.append(f"{label}: parent {t.parent!r} must be a root term")
-            if not t.objects:
+            if not t.objects and not t.abstract:
                 errs.append(f"{label}: has no objects")
         if t.objects and t.status == "Approved" and not any(
             o.startswith(OPERATIONAL_DB + ".") for o in t.objects

@@ -6,7 +6,7 @@
    "synonyms": ["Staff Member"],
    "description": "A person employed by Adventure Works. Employee information includes salary, department and job title, and an employee is also a person known to the company.",
    "related": [{"type": "relatedTo", "term": "Human Resources.Department Assignment"}, {"type": "relatedTo", "term": "Human Resources.Pay History"}, {"type": "relatedTo", "term": "People and Contacts.Person"}],
-   "objects": ["AdventureWorks2019.HumanResources.Employee", "AdventureWorks2019.HumanResources.vEmployee"]},
+   "objects": ["AdventureWorks2019.HumanResources.Employee", "AdventureWorks2019.HumanResources.vEmployee", "AdventureWorksDW2019.dbo.DimEmployee", "AdventureWorksDW2019.dbo.DimEmployeeCopy"]},
 
   {"name": "Department", "parent": "Human Resources", "status": "Approved", "basis": "name",
    "description": "A department within the Adventure Works Cycles company, belonging to a department group.",

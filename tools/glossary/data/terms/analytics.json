@@ -1,0 +1,91 @@
+[
+  {"name": "Analytics (Data Warehouse)", "parent": null, "status": "Draft", "basis": "judgment",
+   "description": "Business domain covering the AdventureWorks data warehouse: the dimensional model of facts (measurable events such as sales) and dimensions (the context they are analysed by, such as date, product and customer) built for reporting and data mining. Definitions in this domain are inferred from table and column names, because the warehouse carries no documentation."},
+
+  {"name": "Dimension", "parent": "Analytics (Data Warehouse)", "status": "Draft", "basis": "judgment", "abstract": true,
+   "synonyms": ["Dimension Table"],
+   "description": "A data warehouse table that describes the business context by which measures are analysed, such as date, product, customer, geography or sales territory. Dimension tables carry a surrogate key and, where they mirror an operational entity, the original business key as an alternate key. Definition inferred from table naming (Dim prefix) and structure.",
+   "related": [{"type": "narrower", "term": "Analytics (Data Warehouse).Date Dimension"}, {"type": "narrower", "term": "Analytics (Data Warehouse).Geography Dimension"}, {"type": "narrower", "term": "Analytics (Data Warehouse).Account"}, {"type": "narrower", "term": "Analytics (Data Warehouse).Organization"}, {"type": "narrower", "term": "Analytics (Data Warehouse).Department Group"}, {"type": "narrower", "term": "Analytics (Data Warehouse).Scenario"}, {"type": "relatedTo", "term": "Analytics (Data Warehouse).Fact"}]},
+
+  {"name": "Fact", "parent": "Analytics (Data Warehouse)", "status": "Draft", "basis": "judgment", "abstract": true,
+   "synonyms": ["Fact Table"],
+   "description": "A data warehouse table that records measurable business events, such as sales, inventory movements or currency rates, with keys pointing to the dimensions that give them context. Definition inferred from table naming (Fact prefix) and structure.",
+   "related": [{"type": "narrower", "term": "Analytics (Data Warehouse).Internet Sales Fact"}, {"type": "narrower", "term": "Analytics (Data Warehouse).Reseller Sales Fact"}, {"type": "narrower", "term": "Analytics (Data Warehouse).Call Center Fact"}, {"type": "narrower", "term": "Analytics (Data Warehouse).Survey Response Fact"}, {"type": "narrower", "term": "Analytics (Data Warehouse).Finance Fact"}, {"type": "relatedTo", "term": "Analytics (Data Warehouse).Dimension"}]},
+
+  {"name": "Date Dimension", "parent": "Analytics (Data Warehouse)", "status": "Draft", "basis": "name",
+   "synonyms": ["Calendar", "Time Dimension"],
+   "description": "The calendar the warehouse analyses events by: each date with its day, week, month, quarter and year, calendar and fiscal, and day and month names in several languages. Definition inferred from column names.",
+   "related": [{"type": "relatedTo", "term": "Analytics (Data Warehouse).Dimension"}],
+   "objects": ["AdventureWorksDW2019.dbo.DimDate"]},
+
+  {"name": "Geography Dimension", "parent": "Analytics (Data Warehouse)", "status": "Draft", "basis": "name",
+   "synonyms": ["Location Dimension"],
+   "description": "Where customers and resellers are located in the warehouse: city, state or province and country or region (with names in several languages), linked to a sales territory. Definition inferred from column names.",
+   "related": [{"type": "relatedTo", "term": "People and Contacts.State or Province"}, {"type": "relatedTo", "term": "People and Contacts.Country or Region"}, {"type": "relatedTo", "term": "Sales.Sales Territory"}, {"type": "relatedTo", "term": "Analytics (Data Warehouse).Dimension"}],
+   "objects": ["AdventureWorksDW2019.dbo.DimGeography"]},
+
+  {"name": "Internet Sales Fact", "parent": "Analytics (Data Warehouse)", "status": "Draft", "basis": "name",
+   "synonyms": ["Online Sales"],
+   "description": "Sales made to individual customers through the online channel, one row per order line, with order, due and ship dates, customer, product, promotion, currency and sales territory, and the quantities and amounts sold. It is the warehouse view of online sales orders. Definition inferred from table and column names.",
+   "related": [{"type": "relatedTo", "term": "Sales.Sales Order"}, {"type": "relatedTo", "term": "Sales.Sales Order Line"}, {"type": "relatedTo", "term": "Sales.Customer"}, {"type": "relatedTo", "term": "Analytics (Data Warehouse).Fact"}],
+   "objects": ["AdventureWorksDW2019.dbo.FactInternetSales"]},
+
+  {"name": "Reseller Sales Fact", "parent": "Analytics (Data Warehouse)", "status": "Draft", "basis": "name",
+   "synonyms": ["Reseller Sales"],
+   "description": "Sales made to reseller stores, one row per order line, with order, due and ship dates, reseller, sales employee, product, promotion, currency and sales territory, and the quantities and amounts sold. It is the warehouse view of reseller sales orders. Definition inferred from table and column names.",
+   "related": [{"type": "relatedTo", "term": "Sales.Sales Order"}, {"type": "relatedTo", "term": "Sales.Sales Order Line"}, {"type": "relatedTo", "term": "Sales.Reseller Store"}, {"type": "relatedTo", "term": "Analytics (Data Warehouse).Fact"}],
+   "objects": ["AdventureWorksDW2019.dbo.FactResellerSales"]},
+
+  {"name": "Call Center Fact", "parent": "Analytics (Data Warehouse)", "status": "Draft", "basis": "name",
+   "synonyms": ["Call Center Activity"],
+   "description": "Call center operations measured per date, wage type and shift: the number of operators, calls received and handled, and related service measures. Definition inferred from column names.",
+   "related": [{"type": "relatedTo", "term": "Analytics (Data Warehouse).Fact"}],
+   "objects": ["AdventureWorksDW2019.dbo.FactCallCenter"]},
+
+  {"name": "Survey Response Fact", "parent": "Analytics (Data Warehouse)", "status": "Draft", "basis": "name",
+   "synonyms": ["Customer Survey Response"],
+   "description": "A customer's response to a survey, recorded by date and customer against a product category and subcategory. Definition inferred from column names.",
+   "related": [{"type": "relatedTo", "term": "Sales.Customer"}, {"type": "relatedTo", "term": "Production.Product Category"}, {"type": "relatedTo", "term": "Analytics (Data Warehouse).Fact"}],
+   "objects": ["AdventureWorksDW2019.dbo.FactSurveyResponse"]},
+
+  {"name": "Finance Fact", "parent": "Analytics (Data Warehouse)", "status": "Draft", "basis": "name",
+   "synonyms": ["Financial Reporting"],
+   "description": "Financial amounts recorded by date, organization, department group, scenario and account, supporting financial reporting. Definition inferred from table and column names.",
+   "related": [{"type": "relatedTo", "term": "Analytics (Data Warehouse).Account"}, {"type": "relatedTo", "term": "Analytics (Data Warehouse).Organization"}, {"type": "relatedTo", "term": "Analytics (Data Warehouse).Department Group"}, {"type": "relatedTo", "term": "Analytics (Data Warehouse).Scenario"}, {"type": "relatedTo", "term": "Analytics (Data Warehouse).Fact"}],
+   "objects": ["AdventureWorksDW2019.dbo.FactFinance"]},
+
+  {"name": "Account", "parent": "Analytics (Data Warehouse)", "status": "Draft", "basis": "name",
+   "synonyms": ["Financial Account", "Chart of Accounts"],
+   "description": "A financial account in a hierarchy of parent and child accounts, with its type and the operator used when rolling it up. Definition inferred from column names.",
+   "related": [{"type": "relatedTo", "term": "Analytics (Data Warehouse).Finance Fact"}, {"type": "relatedTo", "term": "Analytics (Data Warehouse).Dimension"}],
+   "objects": ["AdventureWorksDW2019.dbo.DimAccount"]},
+
+  {"name": "Organization", "parent": "Analytics (Data Warehouse)", "status": "Draft", "basis": "name",
+   "synonyms": ["Legal Entity"],
+   "description": "An organizational unit in a hierarchy of parent and child organizations, with the percentage of ownership and the currency it reports in. Definition inferred from column names.",
+   "related": [{"type": "relatedTo", "term": "Sales.Currency"}, {"type": "relatedTo", "term": "Analytics (Data Warehouse).Finance Fact"}, {"type": "relatedTo", "term": "Analytics (Data Warehouse).Dimension"}],
+   "objects": ["AdventureWorksDW2019.dbo.DimOrganization"]},
+
+  {"name": "Department Group", "parent": "Analytics (Data Warehouse)", "status": "Draft", "basis": "name",
+   "description": "A grouping of departments in a hierarchy of parent and child groups, used in financial reporting. Definition inferred from column names.",
+   "related": [{"type": "relatedTo", "term": "Human Resources.Department"}, {"type": "relatedTo", "term": "Analytics (Data Warehouse).Finance Fact"}, {"type": "relatedTo", "term": "Analytics (Data Warehouse).Dimension"}],
+   "objects": ["AdventureWorksDW2019.dbo.DimDepartmentGroup"]},
+
+  {"name": "Scenario", "parent": "Analytics (Data Warehouse)", "status": "Draft", "basis": "name",
+   "synonyms": ["Planning Scenario"],
+   "description": "A named version of the financial figures, such as actual, budget or forecast, so that amounts can be compared between versions. Definition inferred from the table and column names; the scenario values themselves were not inspected.",
+   "related": [{"type": "relatedTo", "term": "Analytics (Data Warehouse).Finance Fact"}, {"type": "relatedTo", "term": "Analytics (Data Warehouse).Dimension"}],
+   "objects": ["AdventureWorksDW2019.dbo.DimScenario"]},
+
+  {"name": "Prospective Buyer", "parent": "Analytics (Data Warehouse)", "status": "Draft", "basis": "name",
+   "synonyms": ["Prospect", "Lead"],
+   "description": "A person who has not yet bought from Adventure Works but is a prospect for marketing, with name, birth date, marital status, gender and other demographic attributes. Definition inferred from column names.",
+   "related": [{"type": "relatedTo", "term": "Sales.Customer"}],
+   "objects": ["AdventureWorksDW2019.dbo.ProspectiveBuyer"]},
+
+  {"name": "Data Mining View", "parent": "Analytics (Data Warehouse)", "status": "Draft", "basis": "view",
+   "synonyms": ["Mining Model Input"],
+   "description": "Views that prepare warehouse data as input to data mining models: product associations within orders, targeted-mailing candidates with customer attributes, and time series of quantity and amount by region and period. Definition inferred from view and column names.",
+   "related": [{"type": "relatedTo", "term": "Analytics (Data Warehouse).Fact"}, {"type": "relatedTo", "term": "Analytics (Data Warehouse).Dimension"}],
+   "objects": ["AdventureWorksDW2019.dbo.vAssocSeqLineItems", "AdventureWorksDW2019.dbo.vAssocSeqOrders", "AdventureWorksDW2019.dbo.vDMPrep", "AdventureWorksDW2019.dbo.vTargetMail", "AdventureWorksDW2019.dbo.vTimeSeries"]}
+]
