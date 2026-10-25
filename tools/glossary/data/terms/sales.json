@@ -1,0 +1,85 @@
+[
+  {"name": "Sales", "parent": null, "status": "Approved", "basis": "judgment",
+   "description": "Business domain covering how Adventure Works Cycles sells its bicycles, components and accessories to individual consumers and reseller stores: customers, orders, sales staff and territories, discounts, taxes, currencies and payment cards."},
+
+  {"name": "Sales Order", "parent": "Sales", "status": "Approved", "basis": "name",
+   "synonyms": ["Customer Order"],
+   "description": "A customer's request to buy products from Adventure Works. It records the general order information: when it was placed, due and shipped, the customer and the sales person involved, the sales territory, the billing and shipping addresses, the shipping method, the payment card, the currency rate applied and the order totals.",
+   "related": [{"type": "hasPart", "term": "Sales.Sales Order Line"}, {"type": "relatedTo", "term": "Sales.Customer"}, {"type": "relatedTo", "term": "Sales.Sales Person"}, {"type": "relatedTo", "term": "Sales.Sales Territory"}],
+   "objects": ["AdventureWorks2019.Sales.SalesOrderHeader"]},
+
+  {"name": "Sales Order Line", "parent": "Sales", "status": "Approved", "basis": "name",
+   "synonyms": ["Sales Order Detail", "Order Line Item"],
+   "description": "An individual product, in a given quantity at a given price, that is part of a specific sales order. Each line may be priced under a special offer.",
+   "related": [{"type": "partOf", "term": "Sales.Sales Order"}, {"type": "relatedTo", "term": "Sales.Special Offer"}],
+   "objects": ["AdventureWorks2019.Sales.SalesOrderDetail"]},
+
+  {"name": "Customer", "parent": "Sales", "status": "Approved", "basis": "name",
+   "synonyms": ["Buyer"],
+   "description": "A person or a reseller store that purchases Adventure Works products. Individual customers buy online; store customers are resellers. A customer is assigned to a sales territory.",
+   "related": [{"type": "relatedTo", "term": "Sales.Reseller Store"}, {"type": "relatedTo", "term": "Sales.Sales Territory"}],
+   "objects": ["AdventureWorks2019.Sales.Customer", "AdventureWorks2019.Sales.vIndividualCustomer", "AdventureWorks2019.Sales.vPersonDemographics"]},
+
+  {"name": "Reseller Store", "parent": "Sales", "status": "Approved", "basis": "name",
+   "synonyms": ["Store", "Reseller"],
+   "description": "A retail business that resells Adventure Works products and is a customer of the company. A store is looked after by a sales person and has addresses, contacts and demographic information.",
+   "related": [{"type": "relatedTo", "term": "Sales.Customer"}, {"type": "relatedTo", "term": "Sales.Sales Person"}],
+   "objects": ["AdventureWorks2019.Sales.Store", "AdventureWorks2019.Sales.vStoreWithAddresses", "AdventureWorks2019.Sales.vStoreWithContacts", "AdventureWorks2019.Sales.vStoreWithDemographics"]},
+
+  {"name": "Sales Person", "parent": "Sales", "status": "Approved", "basis": "name",
+   "synonyms": ["Sales Representative"],
+   "description": "An employee who sells Adventure Works products. The sales person's current information includes the assigned sales territory, sales quota, commission and year-to-date and previous-year sales. Sales performance is also reported by fiscal year.",
+   "related": [{"type": "relatedTo", "term": "Sales.Sales Territory"}, {"type": "relatedTo", "term": "Sales.Sales Quota"}],
+   "objects": ["AdventureWorks2019.Sales.SalesPerson", "AdventureWorks2019.Sales.vSalesPerson", "AdventureWorks2019.Sales.vSalesPersonSalesByFiscalYears"]},
+
+  {"name": "Sales Quota", "parent": "Sales", "status": "Approved", "basis": "name",
+   "synonyms": ["Sales Performance Target"],
+   "description": "The sales target set for a sales person over a period, kept as a history so that sales performance can be tracked against it over time.",
+   "related": [{"type": "relatedTo", "term": "Sales.Sales Person"}],
+   "objects": ["AdventureWorks2019.Sales.SalesPersonQuotaHistory"]},
+
+  {"name": "Sales Territory", "parent": "Sales", "status": "Approved", "basis": "name",
+   "synonyms": ["Territory", "Sales Region"],
+   "description": "A geographic area in which Adventure Works sells its products, assigned to customers and sales people. The history of sales representatives' transfers between territories is part of the concept.",
+   "related": [{"type": "relatedTo", "term": "Sales.Sales Person"}],
+   "objects": ["AdventureWorks2019.Sales.SalesTerritory", "AdventureWorks2019.Sales.SalesTerritoryHistory"]},
+
+  {"name": "Sales Reason", "parent": "Sales", "status": "Approved", "basis": "name",
+   "synonyms": ["Reason for Purchase"],
+   "description": "A reason a customer gave for purchasing, such as a promotion, price or review. A sales order can be linked to one or more sales reasons.",
+   "related": [{"type": "relatedTo", "term": "Sales.Sales Order"}],
+   "objects": ["AdventureWorks2019.Sales.SalesReason", "AdventureWorks2019.Sales.SalesOrderHeaderSalesReason"]},
+
+  {"name": "Special Offer", "parent": "Sales", "status": "Approved", "basis": "name",
+   "synonyms": ["Discount", "Promotion"],
+   "description": "A sale discount offered on products for a period of time. Which products an offer applies to is part of the concept.",
+   "related": [{"type": "relatedTo", "term": "Sales.Sales Order Line"}],
+   "objects": ["AdventureWorks2019.Sales.SpecialOffer", "AdventureWorks2019.Sales.SpecialOfferProduct"]},
+
+  {"name": "Sales Tax Rate", "parent": "Sales", "status": "Approved", "basis": "name",
+   "description": "The tax rate applied to sales in a state or province.",
+   "objects": ["AdventureWorks2019.Sales.SalesTaxRate"]},
+
+  {"name": "Currency", "parent": "Sales", "status": "Approved", "basis": "name",
+   "description": "A standard ISO currency in which Adventure Works can sell. The currencies used in each country or region are part of the concept.",
+   "related": [{"type": "relatedTo", "term": "Sales.Currency Exchange Rate"}],
+   "objects": ["AdventureWorks2019.Sales.Currency", "AdventureWorks2019.Sales.CountryRegionCurrency"]},
+
+  {"name": "Currency Exchange Rate", "parent": "Sales", "status": "Approved", "basis": "name",
+   "synonyms": ["Currency Rate"],
+   "description": "The rate at which one currency converts into another on a given date, used when pricing sales orders in foreign currencies.",
+   "related": [{"type": "relatedTo", "term": "Sales.Currency"}],
+   "objects": ["AdventureWorks2019.Sales.CurrencyRate"]},
+
+  {"name": "Credit Card", "parent": "Sales", "status": "Approved", "basis": "name",
+   "synonyms": ["Payment Card"],
+   "description": "A customer's credit card used to pay for sales orders. Which people hold which cards is part of the concept.",
+   "related": [{"type": "relatedTo", "term": "Sales.Sales Order"}],
+   "objects": ["AdventureWorks2019.Sales.CreditCard", "AdventureWorks2019.Sales.PersonCreditCard"]},
+
+  {"name": "Shopping Cart Item", "parent": "Sales", "status": "Approved", "basis": "name",
+   "synonyms": ["Basket Item"],
+   "description": "A product an online customer has placed in a shopping cart. Items are held until the order is submitted or cancelled.",
+   "related": [{"type": "relatedTo", "term": "Sales.Sales Order"}],
+   "objects": ["AdventureWorks2019.Sales.ShoppingCartItem"]}
+]

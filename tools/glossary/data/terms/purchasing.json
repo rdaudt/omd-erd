@@ -1,0 +1,34 @@
+[
+  {"name": "Purchasing", "parent": null, "status": "Approved", "basis": "judgment",
+   "description": "Business domain covering how Adventure Works Cycles buys parts and other goods from vendors: vendors, the products they supply, purchase orders and shipping methods."},
+
+  {"name": "Vendor", "parent": "Purchasing", "status": "Approved", "basis": "name",
+   "synonyms": ["Supplier"],
+   "description": "A company from whom Adventure Works purchases parts or other goods. A vendor has addresses and employees to contact.",
+   "related": [{"type": "relatedTo", "term": "Purchasing.Purchase Order"}, {"type": "relatedTo", "term": "Purchasing.Vendor Product"}],
+   "objects": ["AdventureWorks2019.Purchasing.Vendor", "AdventureWorks2019.Purchasing.vVendorWithAddresses", "AdventureWorks2019.Purchasing.vVendorWithContacts"]},
+
+  {"name": "Vendor Product", "parent": "Purchasing", "status": "Approved", "basis": "name",
+   "synonyms": ["Product Source"],
+   "description": "The arrangement under which a vendor supplies a product to Adventure Works, including the units of measure in which it is ordered.",
+   "related": [{"type": "relatedTo", "term": "Purchasing.Vendor"}],
+   "objects": ["AdventureWorks2019.Purchasing.ProductVendor"]},
+
+  {"name": "Purchase Order", "parent": "Purchasing", "status": "Approved", "basis": "name",
+   "synonyms": ["PO"],
+   "description": "An order placed with a vendor to buy goods. It records the general purchase order information: the vendor, the employee who placed it, the shipping method and the order totals.",
+   "related": [{"type": "hasPart", "term": "Purchasing.Purchase Order Line"}, {"type": "relatedTo", "term": "Purchasing.Vendor"}, {"type": "relatedTo", "term": "Purchasing.Ship Method"}],
+   "objects": ["AdventureWorks2019.Purchasing.PurchaseOrderHeader"]},
+
+  {"name": "Purchase Order Line", "parent": "Purchasing", "status": "Approved", "basis": "name",
+   "synonyms": ["Purchase Order Detail"],
+   "description": "An individual product, in a given quantity, that is part of a specific purchase order.",
+   "related": [{"type": "partOf", "term": "Purchasing.Purchase Order"}],
+   "objects": ["AdventureWorks2019.Purchasing.PurchaseOrderDetail"]},
+
+  {"name": "Ship Method", "parent": "Purchasing", "status": "Approved", "basis": "name",
+   "synonyms": ["Shipping Company", "Carrier"],
+   "description": "A shipping company and service level used to deliver goods, both to Adventure Works on purchase orders and from Adventure Works on sales orders.",
+   "related": [{"type": "relatedTo", "term": "Purchasing.Purchase Order"}, {"type": "relatedTo", "term": "Sales.Sales Order"}],
+   "objects": ["AdventureWorks2019.Purchasing.ShipMethod"]}
+]
