@@ -1,0 +1,103 @@
+[
+  {"name": "Production", "parent": null, "status": "Approved", "basis": "judgment",
+   "description": "Business domain covering the products Adventure Works Cycles sells or uses to manufacture what it sells: the product catalog and its classification, bills of materials, manufacturing work orders, inventory, prices and costs, and product documentation."},
+
+  {"name": "Product", "parent": "Production", "status": "Approved", "basis": "name",
+   "synonyms": ["Item", "SKU"],
+   "description": "An item sold by Adventure Works, or used in the manufacture of items it sells. A product belongs to a subcategory and a product model and has a unit of measure.",
+   "related": [{"type": "relatedTo", "term": "Production.Product Subcategory"}, {"type": "relatedTo", "term": "Production.Product Model"}, {"type": "relatedTo", "term": "Production.Unit of Measure"}, {"type": "relatedTo", "term": "Production.Bill of Materials"}],
+   "objects": ["AdventureWorks2019.Production.Product", "AdventureWorks2019.Production.vProductAndDescription"]},
+
+  {"name": "Product Category", "parent": "Production", "status": "Approved", "basis": "name",
+   "description": "The high-level classification of products, such as bikes, components, clothing and accessories.",
+   "related": [{"type": "hasPart", "term": "Production.Product Subcategory"}],
+   "objects": ["AdventureWorks2019.Production.ProductCategory"]},
+
+  {"name": "Product Subcategory", "parent": "Production", "status": "Approved", "basis": "name",
+   "description": "A finer classification of products within a product category.",
+   "related": [{"type": "partOf", "term": "Production.Product Category"}, {"type": "relatedTo", "term": "Production.Product"}],
+   "objects": ["AdventureWorks2019.Production.ProductSubcategory"]},
+
+  {"name": "Product Model", "parent": "Production", "status": "Approved", "basis": "name",
+   "description": "A product model classification: the design that one or more products are built to, with its catalog description and manufacturing instructions.",
+   "related": [{"type": "relatedTo", "term": "Production.Product"}, {"type": "relatedTo", "term": "Production.Product Description"}, {"type": "relatedTo", "term": "Production.Assembly Illustration"}],
+   "objects": ["AdventureWorks2019.Production.ProductModel", "AdventureWorks2019.Production.vProductModelCatalogDescription", "AdventureWorks2019.Production.vProductModelInstructions"]},
+
+  {"name": "Product Description", "parent": "Production", "status": "Approved", "basis": "name",
+   "description": "The descriptive text of a product model, available in several languages (cultures).",
+   "related": [{"type": "relatedTo", "term": "Production.Product Model"}],
+   "objects": ["AdventureWorks2019.Production.ProductDescription", "AdventureWorks2019.Production.ProductModelProductDescriptionCulture", "AdventureWorks2019.Production.Culture"]},
+
+  {"name": "Bill of Materials", "parent": "Production", "status": "Approved", "basis": "name",
+   "synonyms": ["BOM"],
+   "description": "The items required to make bicycles and bicycle subassemblies, identifying the hierarchical relationship between a parent product and its components.",
+   "related": [{"type": "relatedTo", "term": "Production.Product"}, {"type": "relatedTo", "term": "Production.Unit of Measure"}],
+   "objects": ["AdventureWorks2019.Production.BillOfMaterials"]},
+
+  {"name": "Work Order", "parent": "Production", "status": "Approved", "basis": "name",
+   "synonyms": ["Manufacturing Order"],
+   "description": "A manufacturing order to make a quantity of a product, including the order's detailed routing through the manufacturing locations and any quantity scrapped.",
+   "related": [{"type": "relatedTo", "term": "Production.Product"}, {"type": "relatedTo", "term": "Production.Scrap Reason"}, {"type": "relatedTo", "term": "Production.Inventory Location"}],
+   "objects": ["AdventureWorks2019.Production.WorkOrder", "AdventureWorks2019.Production.WorkOrderRouting"]},
+
+  {"name": "Scrap Reason", "parent": "Production", "status": "Approved", "basis": "name",
+   "description": "A reason a manufactured item was scrapped, a manufacturing failure reason.",
+   "related": [{"type": "relatedTo", "term": "Production.Work Order"}],
+   "objects": ["AdventureWorks2019.Production.ScrapReason"]},
+
+  {"name": "Inventory Location", "parent": "Production", "status": "Approved", "basis": "name",
+   "synonyms": ["Location"],
+   "description": "A place where product inventory is held or manufacturing takes place.",
+   "related": [{"type": "relatedTo", "term": "Production.Product Inventory"}],
+   "objects": ["AdventureWorks2019.Production.Location"]},
+
+  {"name": "Product Inventory", "parent": "Production", "status": "Approved", "basis": "name",
+   "synonyms": ["Stock on Hand"],
+   "description": "The quantity of a product held at a given inventory location.",
+   "related": [{"type": "relatedTo", "term": "Production.Product"}, {"type": "relatedTo", "term": "Production.Inventory Location"}],
+   "objects": ["AdventureWorks2019.Production.ProductInventory"]},
+
+  {"name": "Inventory Transaction", "parent": "Production", "status": "Approved", "basis": "name",
+   "synonyms": ["Transaction History"],
+   "description": "A record of each purchase order, sales order or work order transaction affecting a product, held for the current year and, as an archive, for previous years.",
+   "related": [{"type": "relatedTo", "term": "Production.Product"}],
+   "objects": ["AdventureWorks2019.Production.TransactionHistory", "AdventureWorks2019.Production.TransactionHistoryArchive"]},
+
+  {"name": "Product Cost History", "parent": "Production", "status": "Approved", "basis": "name",
+   "description": "The changes in the standard cost of a product over time.",
+   "related": [{"type": "relatedTo", "term": "Production.Product"}],
+   "objects": ["AdventureWorks2019.Production.ProductCostHistory"]},
+
+  {"name": "Product List Price History", "parent": "Production", "status": "Approved", "basis": "name",
+   "synonyms": ["Price History"],
+   "description": "The changes in the list price of a product over time.",
+   "related": [{"type": "relatedTo", "term": "Production.Product"}],
+   "objects": ["AdventureWorks2019.Production.ProductListPriceHistory"]},
+
+  {"name": "Product Review", "parent": "Production", "status": "Approved", "basis": "name",
+   "description": "A review of a product written by a customer who has purchased it.",
+   "related": [{"type": "relatedTo", "term": "Production.Product"}],
+   "objects": ["AdventureWorks2019.Production.ProductReview"]},
+
+  {"name": "Product Photo", "parent": "Production", "status": "Approved", "basis": "name",
+   "synonyms": ["Product Image"],
+   "description": "An image of a product, and the link between products and their photos.",
+   "related": [{"type": "relatedTo", "term": "Production.Product"}],
+   "objects": ["AdventureWorks2019.Production.ProductPhoto", "AdventureWorks2019.Production.ProductProductPhoto"]},
+
+  {"name": "Product Document", "parent": "Production", "status": "Approved", "basis": "name",
+   "description": "A product maintenance document, and the link between products and the documents that relate to them.",
+   "related": [{"type": "relatedTo", "term": "Production.Product"}],
+   "objects": ["AdventureWorks2019.Production.Document", "AdventureWorks2019.Production.ProductDocument"]},
+
+  {"name": "Assembly Illustration", "parent": "Production", "status": "Approved", "basis": "name",
+   "synonyms": ["Illustration"],
+   "description": "A bicycle assembly diagram, and the link between product models and their illustrations.",
+   "related": [{"type": "relatedTo", "term": "Production.Product Model"}],
+   "objects": ["AdventureWorks2019.Production.Illustration", "AdventureWorks2019.Production.ProductModelIllustration"]},
+
+  {"name": "Unit of Measure", "parent": "Production", "status": "Approved", "basis": "name",
+   "synonyms": ["UoM"],
+   "description": "A unit in which quantities of products and components are measured.",
+   "objects": ["AdventureWorks2019.Production.UnitMeasure"]}
+]

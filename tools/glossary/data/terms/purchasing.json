@@ -5,7 +5,7 @@
   {"name": "Vendor", "parent": "Purchasing", "status": "Approved", "basis": "name",
    "synonyms": ["Supplier"],
    "description": "A company from whom Adventure Works purchases parts or other goods. A vendor has addresses and employees to contact.",
-   "related": [{"type": "relatedTo", "term": "Purchasing.Purchase Order"}, {"type": "relatedTo", "term": "Purchasing.Vendor Product"}],
+   "related": [{"type": "relatedTo", "term": "Purchasing.Purchase Order"}, {"type": "relatedTo", "term": "Purchasing.Vendor Product"}, {"type": "relatedTo", "term": "People and Contacts.Address"}],
    "objects": ["AdventureWorks2019.Purchasing.Vendor", "AdventureWorks2019.Purchasing.vVendorWithAddresses", "AdventureWorks2019.Purchasing.vVendorWithContacts"]},
 
   {"name": "Vendor Product", "parent": "Purchasing", "status": "Approved", "basis": "name",
@@ -17,13 +17,13 @@
   {"name": "Purchase Order", "parent": "Purchasing", "status": "Approved", "basis": "name",
    "synonyms": ["PO"],
    "description": "An order placed with a vendor to buy goods. It records the general purchase order information: the vendor, the employee who placed it, the shipping method and the order totals.",
-   "related": [{"type": "hasPart", "term": "Purchasing.Purchase Order Line"}, {"type": "relatedTo", "term": "Purchasing.Vendor"}, {"type": "relatedTo", "term": "Purchasing.Ship Method"}],
+   "related": [{"type": "hasPart", "term": "Purchasing.Purchase Order Line"}, {"type": "relatedTo", "term": "Purchasing.Vendor"}, {"type": "relatedTo", "term": "Purchasing.Ship Method"}, {"type": "relatedTo", "term": "Human Resources.Employee"}],
    "objects": ["AdventureWorks2019.Purchasing.PurchaseOrderHeader"]},
 
   {"name": "Purchase Order Line", "parent": "Purchasing", "status": "Approved", "basis": "name",
    "synonyms": ["Purchase Order Detail"],
    "description": "An individual product, in a given quantity, that is part of a specific purchase order.",
-   "related": [{"type": "partOf", "term": "Purchasing.Purchase Order"}],
+   "related": [{"type": "partOf", "term": "Purchasing.Purchase Order"}, {"type": "relatedTo", "term": "Production.Product"}],
    "objects": ["AdventureWorks2019.Purchasing.PurchaseOrderDetail"]},
 
   {"name": "Ship Method", "parent": "Purchasing", "status": "Approved", "basis": "name",

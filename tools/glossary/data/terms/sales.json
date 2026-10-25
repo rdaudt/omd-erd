@@ -5,19 +5,19 @@
   {"name": "Sales Order", "parent": "Sales", "status": "Approved", "basis": "name",
    "synonyms": ["Customer Order"],
    "description": "A customer's request to buy products from Adventure Works. It records the general order information: when it was placed, due and shipped, the customer and the sales person involved, the sales territory, the billing and shipping addresses, the shipping method, the payment card, the currency rate applied and the order totals.",
-   "related": [{"type": "hasPart", "term": "Sales.Sales Order Line"}, {"type": "relatedTo", "term": "Sales.Customer"}, {"type": "relatedTo", "term": "Sales.Sales Person"}, {"type": "relatedTo", "term": "Sales.Sales Territory"}],
+   "related": [{"type": "hasPart", "term": "Sales.Sales Order Line"}, {"type": "relatedTo", "term": "Sales.Customer"}, {"type": "relatedTo", "term": "Sales.Sales Person"}, {"type": "relatedTo", "term": "Sales.Sales Territory"}, {"type": "relatedTo", "term": "People and Contacts.Address"}],
    "objects": ["AdventureWorks2019.Sales.SalesOrderHeader"]},
 
   {"name": "Sales Order Line", "parent": "Sales", "status": "Approved", "basis": "name",
    "synonyms": ["Sales Order Detail", "Order Line Item"],
    "description": "An individual product, in a given quantity at a given price, that is part of a specific sales order. Each line may be priced under a special offer.",
-   "related": [{"type": "partOf", "term": "Sales.Sales Order"}, {"type": "relatedTo", "term": "Sales.Special Offer"}],
+   "related": [{"type": "partOf", "term": "Sales.Sales Order"}, {"type": "relatedTo", "term": "Sales.Special Offer"}, {"type": "relatedTo", "term": "Production.Product"}],
    "objects": ["AdventureWorks2019.Sales.SalesOrderDetail"]},
 
   {"name": "Customer", "parent": "Sales", "status": "Approved", "basis": "name",
    "synonyms": ["Buyer"],
    "description": "A person or a reseller store that purchases Adventure Works products. Individual customers buy online; store customers are resellers. A customer is assigned to a sales territory.",
-   "related": [{"type": "relatedTo", "term": "Sales.Reseller Store"}, {"type": "relatedTo", "term": "Sales.Sales Territory"}],
+   "related": [{"type": "relatedTo", "term": "Sales.Reseller Store"}, {"type": "relatedTo", "term": "Sales.Sales Territory"}, {"type": "relatedTo", "term": "People and Contacts.Person"}],
    "objects": ["AdventureWorks2019.Sales.Customer", "AdventureWorks2019.Sales.vIndividualCustomer", "AdventureWorks2019.Sales.vPersonDemographics"]},
 
   {"name": "Reseller Store", "parent": "Sales", "status": "Approved", "basis": "name",
@@ -29,7 +29,7 @@
   {"name": "Sales Person", "parent": "Sales", "status": "Approved", "basis": "name",
    "synonyms": ["Sales Representative"],
    "description": "An employee who sells Adventure Works products. The sales person's current information includes the assigned sales territory, sales quota, commission and year-to-date and previous-year sales. Sales performance is also reported by fiscal year.",
-   "related": [{"type": "relatedTo", "term": "Sales.Sales Territory"}, {"type": "relatedTo", "term": "Sales.Sales Quota"}],
+   "related": [{"type": "relatedTo", "term": "Sales.Sales Territory"}, {"type": "relatedTo", "term": "Sales.Sales Quota"}, {"type": "relatedTo", "term": "Human Resources.Employee"}],
    "objects": ["AdventureWorks2019.Sales.SalesPerson", "AdventureWorks2019.Sales.vSalesPerson", "AdventureWorks2019.Sales.vSalesPersonSalesByFiscalYears"]},
 
   {"name": "Sales Quota", "parent": "Sales", "status": "Approved", "basis": "name",

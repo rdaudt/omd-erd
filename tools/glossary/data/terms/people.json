@@ -1,0 +1,58 @@
+[
+  {"name": "People and Contacts", "parent": null, "status": "Approved", "basis": "judgment",
+   "description": "Business domain covering the people and organizations Adventure Works deals with, and how to reach them: persons, business entities, addresses, email addresses, phone numbers and geographic locations. Employees, customers and vendors all draw on these shared concepts."},
+
+  {"name": "Person", "parent": "People and Contacts", "status": "Approved", "basis": "name",
+   "synonyms": ["Individual"],
+   "description": "A human being involved with Adventure Works: an employee, a customer or a contact at a vendor or store. Person information includes name, title and additional contact information.",
+   "related": [{"type": "relatedTo", "term": "People and Contacts.Business Entity"}, {"type": "relatedTo", "term": "People and Contacts.Email Address"}, {"type": "relatedTo", "term": "People and Contacts.Phone Number"}, {"type": "relatedTo", "term": "People and Contacts.Person Credential"}],
+   "objects": ["AdventureWorks2019.Person.Person", "AdventureWorks2019.Person.vAdditionalContactInfo", "AdventureWorks2019.dbo.Person"]},
+
+  {"name": "Business Entity", "parent": "People and Contacts", "status": "Approved", "basis": "name",
+   "synonyms": ["Party"],
+   "description": "The common identity that connects vendors, customers and employees with their address and contact information.",
+   "related": [{"type": "relatedTo", "term": "People and Contacts.Address"}, {"type": "relatedTo", "term": "People and Contacts.Business Contact"}],
+   "objects": ["AdventureWorks2019.Person.BusinessEntity"]},
+
+  {"name": "Business Contact", "parent": "People and Contacts", "status": "Approved", "basis": "name",
+   "synonyms": ["Contact"],
+   "description": "A person who acts as a contact for a store, vendor or employee, together with the type of contact they are, such as a purchasing agent or owner.",
+   "related": [{"type": "relatedTo", "term": "People and Contacts.Business Entity"}, {"type": "relatedTo", "term": "People and Contacts.Person"}],
+   "objects": ["AdventureWorks2019.Person.BusinessEntityContact", "AdventureWorks2019.Person.ContactType"]},
+
+  {"name": "Address", "parent": "People and Contacts", "status": "Approved", "basis": "name",
+   "synonyms": ["Street Address"],
+   "description": "Street address information for customers, employees and vendors. An address is linked to a business entity with a type of address, such as billing, shipping or home.",
+   "related": [{"type": "relatedTo", "term": "People and Contacts.Business Entity"}, {"type": "relatedTo", "term": "People and Contacts.State or Province"}],
+   "objects": ["AdventureWorks2019.Person.Address", "AdventureWorks2019.Person.AddressType", "AdventureWorks2019.Person.BusinessEntityAddress"]},
+
+  {"name": "Email Address", "parent": "People and Contacts", "status": "Approved", "basis": "name",
+   "synonyms": ["Email"],
+   "description": "Where to send a person email.",
+   "related": [{"type": "relatedTo", "term": "People and Contacts.Person"}],
+   "objects": ["AdventureWorks2019.Person.EmailAddress"]},
+
+  {"name": "Phone Number", "parent": "People and Contacts", "status": "Approved", "basis": "name",
+   "synonyms": ["Telephone"],
+   "description": "The telephone number and type of phone (such as cell, home or work) of a person.",
+   "related": [{"type": "relatedTo", "term": "People and Contacts.Person"}],
+   "objects": ["AdventureWorks2019.Person.PersonPhone", "AdventureWorks2019.Person.PhoneNumberType"]},
+
+  {"name": "Person Credential", "parent": "People and Contacts", "status": "Approved", "basis": "name",
+   "synonyms": ["Login"],
+   "description": "One-way hashed authentication information for a person. The credential is sensitive: it is recorded here as a concept, and its values should never be exposed.",
+   "related": [{"type": "relatedTo", "term": "People and Contacts.Person"}],
+   "objects": ["AdventureWorks2019.Person.Password"]},
+
+  {"name": "Country or Region", "parent": "People and Contacts", "status": "Approved", "basis": "name",
+   "synonyms": ["Country"],
+   "description": "A country or region identified by its ISO standard code.",
+   "related": [{"type": "hasPart", "term": "People and Contacts.State or Province"}],
+   "objects": ["AdventureWorks2019.Person.CountryRegion"]},
+
+  {"name": "State or Province", "parent": "People and Contacts", "status": "Approved", "basis": "name",
+   "synonyms": ["State", "Province"],
+   "description": "A state or province within a country or region, assigned to a sales territory.",
+   "related": [{"type": "partOf", "term": "People and Contacts.Country or Region"}],
+   "objects": ["AdventureWorks2019.Person.StateProvince", "AdventureWorks2019.Person.vStateProvinceCountryRegion"]}
+]

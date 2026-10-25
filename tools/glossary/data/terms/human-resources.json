@@ -1,0 +1,39 @@
+[
+  {"name": "Human Resources", "parent": null, "status": "Approved", "basis": "judgment",
+   "description": "Business domain covering the people who work for Adventure Works Cycles: employees, the departments and shifts they work in, their pay, and the job candidates who apply to join."},
+
+  {"name": "Employee", "parent": "Human Resources", "status": "Approved", "basis": "name",
+   "synonyms": ["Staff Member"],
+   "description": "A person employed by Adventure Works. Employee information includes salary, department and job title, and an employee is also a person known to the company.",
+   "related": [{"type": "relatedTo", "term": "Human Resources.Department Assignment"}, {"type": "relatedTo", "term": "Human Resources.Pay History"}, {"type": "relatedTo", "term": "People and Contacts.Person"}],
+   "objects": ["AdventureWorks2019.HumanResources.Employee", "AdventureWorks2019.HumanResources.vEmployee"]},
+
+  {"name": "Department", "parent": "Human Resources", "status": "Approved", "basis": "name",
+   "description": "A department within the Adventure Works Cycles company, belonging to a department group.",
+   "related": [{"type": "relatedTo", "term": "Human Resources.Department Assignment"}],
+   "objects": ["AdventureWorks2019.HumanResources.Department", "AdventureWorks2019.HumanResources.DepartmentTemp"]},
+
+  {"name": "Department Assignment", "parent": "Human Resources", "status": "Approved", "basis": "name",
+   "synonyms": ["Department History", "Department Transfer"],
+   "description": "The department and work shift an employee belongs to over time, including transfers between departments, so that both current and previous departments can be reported.",
+   "related": [{"type": "relatedTo", "term": "Human Resources.Employee"}, {"type": "relatedTo", "term": "Human Resources.Department"}, {"type": "relatedTo", "term": "Human Resources.Shift"}],
+   "objects": ["AdventureWorks2019.HumanResources.EmployeeDepartmentHistory", "AdventureWorks2019.HumanResources.vEmployeeDepartment", "AdventureWorks2019.HumanResources.vEmployeeDepartmentHistory"]},
+
+  {"name": "Shift", "parent": "Human Resources", "status": "Approved", "basis": "name",
+   "synonyms": ["Work Shift"],
+   "description": "A work shift, the time of day during which employees work.",
+   "related": [{"type": "relatedTo", "term": "Human Resources.Department Assignment"}],
+   "objects": ["AdventureWorks2019.HumanResources.Shift"]},
+
+  {"name": "Pay History", "parent": "Human Resources", "status": "Approved", "basis": "name",
+   "synonyms": ["Employee Pay History"],
+   "description": "The history of an employee's pay rate and how often it is paid.",
+   "related": [{"type": "relatedTo", "term": "Human Resources.Employee"}],
+   "objects": ["AdventureWorks2019.HumanResources.EmployeePayHistory"]},
+
+  {"name": "Job Candidate", "parent": "Human Resources", "status": "Approved", "basis": "name",
+   "synonyms": ["Applicant"],
+   "description": "A person who has submitted a resume to Human Resources as a job applicant, including the education and employment history held in the resume. A candidate who is hired becomes an employee.",
+   "related": [{"type": "relatedTo", "term": "Human Resources.Employee"}],
+   "objects": ["AdventureWorks2019.HumanResources.JobCandidate", "AdventureWorks2019.HumanResources.vJobCandidate", "AdventureWorks2019.HumanResources.vJobCandidateEducation", "AdventureWorks2019.HumanResources.vJobCandidateEmployment"]}
+]
