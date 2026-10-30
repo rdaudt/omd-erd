@@ -11,7 +11,7 @@ from app.models import (
 from app.omd import OmdClient
 from app.shaping import derive_sensitivity, product_quality, table_quality
 
-PRODUCT_FIELDS = "domains,owners,experts,assets,tags,extension,certification"
+PRODUCT_FIELDS = "domains,owners,experts,tags,extension,certification"
 TABLE_FIELDS = "tags,columns"
 
 
@@ -48,7 +48,8 @@ class CatalogService:
 
     def _tables(self, product: dict) -> list[dict]:
         tables = []
-        for asset in product.get("assets") or []:
+        assets = self._client.list_all(f"/dataProducts/name/{quote(product['name'], safe='')}/assets")
+        for asset in assets:
             if asset.get("type") != "table":
                 continue
             fqn = asset["fullyQualifiedName"]

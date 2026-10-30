@@ -46,7 +46,11 @@ class FakeOmd:
         path = request.url.path.removeprefix("/api/v1")
         self.requests.append(path)
         if path == "/dataProducts":
-            return httpx.Response(200, json={"data": PRODUCTS, "paging": {}})
+            return httpx.Response(200, json={"data": [{k: v for k, v in p.items() if k != "assets"} for p in PRODUCTS], "paging": {}})
+        if path.startswith("/dataProducts/name/") and path.endswith("/assets"):
+            name = path.split("/")[3]
+            assets = next(p for p in PRODUCTS if p["name"] == name).get("assets", [])
+            return httpx.Response(200, json={"data": assets, "paging": {"total": len(assets)}})
         if path.startswith("/tables/name/"):
             fqn = path.removeprefix("/tables/name/")
             return httpx.Response(200, json=TABLES[fqn])
