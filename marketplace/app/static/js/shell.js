@@ -26,3 +26,7 @@ export function showBanner(message) {
   }
   banner.textContent = message;
 }
+
+export function clearBanner() {
+  document.getElementById("error-banner")?.remove();
+}

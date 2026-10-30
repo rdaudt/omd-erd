@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     omd_host: str = Field(alias="OMD_HOST")
     omd_token: str = Field(alias="OMD_TOKEN")
     request_timeout_seconds: float = Field(10.0, alias="OMD_REQUEST_TIMEOUT_SECONDS")
-    cache_ttl_seconds: int = Field(30, alias="MARKETPLACE_CACHE_TTL_SECONDS")
+    cache_ttl_seconds: int = Field(300, alias="MARKETPLACE_CACHE_TTL_SECONDS")
 
 
 @lru_cache

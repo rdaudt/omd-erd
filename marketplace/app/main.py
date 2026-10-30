@@ -1,7 +1,9 @@
+from contextlib import asynccontextmanager
 from functools import lru_cache
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, field_validator
@@ -12,7 +14,6 @@ from app.omd import OmdClient, OmdError
 from app.requests_store import AccessRequest, AccessRequestStore
 from app.shaping import facets, filter_products
 
-app = FastAPI(title="Data Marketplace demo")
 
 
 @lru_cache
@@ -28,6 +29,19 @@ def get_catalog() -> CatalogService:
 @lru_cache
 def get_store() -> AccessRequestStore:
     return AccessRequestStore()
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    # The first catalog build takes a few seconds; do it before the first visitor arrives.
+    try:
+        await run_in_threadpool(get_catalog().list_products)
+    except OmdError:
+        pass
+    yield
+
+
+app = FastAPI(title="Data Marketplace demo", lifespan=lifespan)
 
 
 class AccessRequestIn(BaseModel):

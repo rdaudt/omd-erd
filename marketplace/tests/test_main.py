@@ -38,3 +38,17 @@ def test_root_serves_the_marketplace_page_and_api_still_wins():
     assert page.status_code == 200 and "Data Marketplace" in page.text
     assert client.get("/vendor/bootstrap/bootstrap.min.css").status_code == 200
     assert client.get("/api/products/definitely-missing").status_code in (404, 503)
+
+
+def test_startup_warms_the_catalog_and_survives_omd_being_down(monkeypatch):
+    calls = []
+
+    class Catalog:
+        def list_products(self):
+            calls.append(1)
+            raise OmdError(503, "down")
+
+    monkeypatch.setattr(main, "get_catalog", lambda: Catalog())
+    with TestClient(main.app):
+        pass
+    assert calls == [1]
