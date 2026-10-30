@@ -31,6 +31,8 @@ TABLES = {
     FACT: {"id": "t1", "name": "FactInternetSales", "fullyQualifiedName": FACT, "description": "Fact table",
            "tableType": "Regular", "tags": [],
            "columns": [{"name": "Email", "tags": [tag("PII.Sensitive")]}]},
+    DIM: {"id": "d1", "name": "DimCustomer", "fullyQualifiedName": DIM, "description": "", "tableType": "Regular",
+          "tags": [], "columns": []},
     VIEW: {"id": "t2", "name": "vSales", "fullyQualifiedName": VIEW, "description": "", "tableType": "View",
            "tags": [], "columns": []},
 }
@@ -65,9 +67,9 @@ class FakeOmd:
             if fqn == FACT:
                 return httpx.Response(200, json={
                     "entity": {"id": "t1", "fullyQualifiedName": FACT},
-                    "nodes": [{"id": "d1", "fullyQualifiedName": DIM}],
+                    "nodes": [{"id": "d1", "fullyQualifiedName": DIM}, {"id": "t2", "fullyQualifiedName": VIEW}],
                     "upstreamEdges": [{"fromEntity": "d1", "toEntity": "t1"}],
-                    "downstreamEdges": [],
+                    "downstreamEdges": [{"fromEntity": "t1", "toEntity": "t2"}],
                 })
             return httpx.Response(200, json={"entity": {"id": "x", "fullyQualifiedName": fqn},
                                              "nodes": [], "upstreamEdges": [], "downstreamEdges": []})

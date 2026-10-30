@@ -35,6 +35,11 @@ class StoreOmd:
         if path.startswith("/tables/name/"):
             fqn = unquote(path.removeprefix("/tables/name/"))
             return httpx.Response(200, json=self.tables[fqn]) if fqn in self.tables else httpx.Response(404, json={})
+        if method == "PATCH" and path.startswith("/tables/"):
+            table = next(t for t in self.tables.values() if t["id"] == path.rsplit("/", 1)[-1])
+            for op in body:
+                table[op["path"].lstrip("/")] = op["value"]
+            return httpx.Response(200, json=table)
         if method == "PUT" and path == "/dataQuality/testCases":
             key = f"{body['entityLink']}|{body['name']}"
             table_fqn = body["entityLink"].split("::")[2].rstrip(">")

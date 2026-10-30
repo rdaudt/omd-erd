@@ -117,19 +117,31 @@ class CatalogService:
         ]
         return ProductDetail(**summary.model_dump(), datasets=datasets, tests=tests, lineage=self._lineage(tables))
 
+    def _is_view(self, fqn: str) -> bool:
+        table = self._client.get(f"/tables/name/{quote(fqn, safe='')}")
+        return table.get("tableType") in ("View", "MaterializedView")
+
     def _lineage(self, tables: list[dict]) -> LineageGraph:
-        nodes: list[str] = []
+        inside = {t["fullyQualifiedName"] for t in tables}
+        views: dict[str, bool] = {}
+
+        def hidden(fqn: str) -> bool:
+            if fqn in inside:
+                return False
+            if fqn not in views:
+                views[fqn] = self._is_view(fqn)
+            return views[fqn]
+
+        nodes = sorted(inside)
         edges: list[tuple[str, str]] = []
-        for table in tables:
-            fqn = table["fullyQualifiedName"]
+        for fqn in nodes:
             graph = self._client.get(f"/lineage/table/name/{quote(fqn, safe='')}", {"upstreamDepth": 1, "downstreamDepth": 1})
             names = {n["id"]: n["fullyQualifiedName"] for n in graph.get("nodes", [])}
             names[graph["entity"]["id"]] = graph["entity"]["fullyQualifiedName"]
             for edge in graph.get("upstreamEdges", []) + graph.get("downstreamEdges", []):
                 pair = (names.get(edge["fromEntity"]), names.get(edge["toEntity"]))
-                if all(pair) and pair not in edges:
+                if all(pair) and pair not in edges and not hidden(pair[0]) and not hidden(pair[1]):
                     edges.append(pair)
-            for n in [fqn, *names.values()]:
-                if n not in nodes:
-                    nodes.append(n)
+        for pair in edges:
+            nodes += [n for n in pair if n not in nodes]
         return LineageGraph(nodes=nodes, edges=edges)

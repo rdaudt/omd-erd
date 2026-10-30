@@ -84,3 +84,13 @@ def ensure_product(client: OmdClient, product: d.ProductDef) -> str:
         client.patch(f"/dataProducts/{created['id']}", [{"op": "add", "path": "/certification", "value": {
             "tagLabel": {"tagFQN": wanted, "source": "Classification", "labelType": "Manual", "state": "Confirmed"}}}])
     return product.name
+
+
+def ensure_table_descriptions(client: OmdClient, descriptions: dict[str, str]) -> None:
+    """Add a description only where the table has none; never overwrite existing text."""
+    for fqn, text in descriptions.items():
+        table = _find(client, f"/tables/name/{quote(fqn, safe='')}", {"fields": "description"})
+        if table is None:
+            raise SeedError(f"Table not found in OpenMetadata: {fqn}")
+        if not (table.get("description") or "").strip():
+            client.patch(f"/tables/{table['id']}", [{"op": "add", "path": "/description", "value": text}])

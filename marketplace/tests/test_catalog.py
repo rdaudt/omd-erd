@@ -46,7 +46,7 @@ def test_views_are_excluded_from_datasets(service):
 def test_detail_has_tests_and_lineage(service):
     detail = service.get_product("internet-sales-mart")
     assert [t.status for t in detail.tests] == ["Success", "Success", "Success", "Failed"]
-    assert detail.lineage.edges == [(DIM, FACT)]
+    assert detail.lineage.edges == [(DIM, FACT)], "edges to views are dropped"
     assert set(detail.lineage.nodes) == {DIM, FACT}
 
 

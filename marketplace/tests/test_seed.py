@@ -81,3 +81,15 @@ def test_every_product_has_an_explicit_sensitivity_tag(omd):
     for name, product in store.entities["dataProducts"].items():
         assert any(t["tagFQN"].startswith("Sensitivity.") for t in product["tags"]), name
     assert set(store.entities["tags"]) >= {"Sensitivity.Public", "Sensitivity.Internal", "Sensitivity.Confidential"}
+
+
+def test_descriptions_are_added_only_where_empty(omd):
+    from seed.writer import ensure_table_descriptions
+
+    store, client = omd
+    empty, described = list(d.DESCRIPTIONS)[0], d.PRODUCTS[2].tables[0]
+    store.tables[empty]["description"] = ""
+    ensure_table_descriptions(client, {empty: "New text", described: "Should not be written"})
+    patches = [w for w in store.writes if w[0] == "PATCH" and w[1].startswith("/tables/")]
+    assert len(patches) == 1
+    assert patches[0][2] == [{"op": "add", "path": "/description", "value": "New text"}]

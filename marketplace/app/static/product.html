@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data product | Data Marketplace</title>
+  <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="/vendor/fa/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/css/wsbc.css">
+</head>
+<body>
+  <div id="app-header"></div>
+  <main class="container py-4" id="content">
+    <p class="wsbc-meta">Loading data product...</p>
+  </main>
+
+  <div class="modal fade" id="request-modal" tabindex="-1" aria-labelledby="request-title" aria-hidden="true">
+    <div class="modal-dialog">
+      <form class="modal-content" id="request-form" novalidate>
+        <div class="modal-header">
+          <h2 class="modal-title fs-5 text-body" id="request-title">Request access</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p id="request-product" class="fw-bold"></p>
+          <div class="mb-3">
+            <label class="form-label" for="justification">Business justification</label>
+            <textarea class="form-control" id="justification" rows="4" required></textarea>
+            <div class="invalid-feedback">Please explain why you need this data.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="duration">Duration</label>
+            <select class="form-select" id="duration">
+              <option>30 days</option>
+              <option selected>90 days</option>
+              <option>6 months</option>
+              <option>12 months</option>
+            </select>
+          </div>
+          <div class="alert alert-danger d-none" id="request-error" role="alert"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-wsbc-outline" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-wsbc" id="request-submit">Submit request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+  <script type="module" src="/js/product.js"></script>
+</body>
+</html>

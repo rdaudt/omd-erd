@@ -21,6 +21,8 @@ def run_base_seed(client: OmdClient) -> None:
     print("tags      Sensitivity.Public/Internal/Confidential")
     writer.ensure_custom_property(client)
     print(f"property  dataProduct.{d.ENTRA_PROPERTY}")
+    writer.ensure_table_descriptions(client, d.DESCRIPTIONS)
+    print(f"described {len(d.DESCRIPTIONS)} tables (where empty)")
     for product in d.PRODUCTS:
         writer.ensure_product(client, product)
         print(f"product   {product.name} -> {product.entra_group}")

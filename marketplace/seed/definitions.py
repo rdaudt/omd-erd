@@ -179,3 +179,15 @@ LINEAGE: list[tuple[str, str]] = [
     (f"{AW}.Production.ProductCategory", f"{AW}.Production.ProductSubcategory"),
     (f"{AW}.Production.ProductSubcategory", f"{AW}.Production.Product"),
 ]
+
+
+# Descriptions for tables that have none in OMD (the AdventureWorksDW tables). Added only where empty.
+DESCRIPTIONS: dict[str, str] = {
+    f"{DW}.dbo.FactInternetSales": "One row per online sales order line, with product, customer, date and territory keys, quantities and amounts.",
+    f"{DW}.dbo.DimCustomer": "Customers who bought online, with demographics, contact details and geography. Contains personal information.",
+    f"{DW}.dbo.DimProduct": "Product dimension: name, category, list price, cost, size and color, with history of changes.",
+    f"{DW}.dbo.DimDate": "Calendar dimension: one row per day with day, week, month, quarter, fiscal period and year.",
+    f"{DW}.dbo.DimSalesTerritory": "Sales regions with country and group, used to roll sales up by geography.",
+    f"{DW}.dbo.FactResellerSales": "One row per reseller order line, with reseller, product, employee, date and territory keys and amounts.",
+    f"{DW}.dbo.DimReseller": "Reseller businesses that buy wholesale, with business type, size and location.",
+}
