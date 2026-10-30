@@ -1,4 +1,5 @@
 import httpx
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app import main
@@ -19,10 +20,21 @@ def test_health_reports_omd_down_without_crashing(monkeypatch):
 
 
 def test_omd_error_becomes_503_with_message():
-    @main.app.get("/api/_boom")
+    app = FastAPI()
+    app.add_exception_handler(OmdError, main.omd_error_handler)
+
+    @app.get("/boom")
     def boom():
         raise OmdError(401, "OpenMetadata rejected the token")
 
-    r = TestClient(main.app).get("/api/_boom")
+    r = TestClient(app).get("/boom")
     assert r.status_code == 503
     assert r.json() == {"detail": "OpenMetadata rejected the token"}
+
+
+def test_root_serves_the_marketplace_page_and_api_still_wins():
+    client = TestClient(main.app)
+    page = client.get("/")
+    assert page.status_code == 200 and "Data Marketplace" in page.text
+    assert client.get("/vendor/bootstrap/bootstrap.min.css").status_code == 200
+    assert client.get("/api/products/definitely-missing").status_code in (404, 503)

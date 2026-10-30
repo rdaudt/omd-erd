@@ -1,7 +1,9 @@
 from functools import lru_cache
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, field_validator
 
 from app.catalog import CatalogService
@@ -98,3 +100,7 @@ def get_access_request(number: str, store: AccessRequestStore = Depends(get_stor
     if request is None:
         raise HTTPException(404, "Request not found")
     return request
+
+
+# Static frontend last, so it never shadows the /api routes.
+app.mount("/", StaticFiles(directory=Path(__file__).parent / "static", html=True), name="static")

@@ -1,0 +1,72 @@
+/* WorkSafeBC look rebuilt from the documented design tokens (UX design system v8.1.0). */
+:root {
+  --wsbc-orange: #ED8B00;
+  --wsbc-body: #453F39;
+  --wsbc-warm-grey: #776E64;
+  --wsbc-ash: #F1F0EF;
+  --wsbc-silver: #E4E2E0;
+  --wsbc-steel: #C9C5C1;
+  --wsbc-smoke: #ADA8A2;
+  --wsbc-iron: #47423C;
+  --wsbc-blue: #6399AE;
+  --wsbc-red: #A4343A;
+  --wsbc-sunset: #DC4405;
+  --wsbc-yellow: #F1BE48;
+  --wsbc-moss: #888D30;
+  --wsbc-pale-moss: #E7E8D6;
+  --wsbc-pale-blue: #E0EBEF;
+  --wsbc-pale-yellow: #F9E0A0;
+
+  --bs-body-font-family: "Noto Sans", Noto, Verdana, sans-serif;
+  --bs-body-color: var(--wsbc-body);
+  --bs-body-bg: #fff;
+  --bs-primary: var(--wsbc-orange);
+  --bs-primary-rgb: 237, 139, 0;
+  --bs-link-color: #1d5f7a;
+  --bs-link-hover-color: var(--wsbc-iron);
+}
+
+body { font-size: 1rem; color: var(--wsbc-body); background: #fff; }
+.container { max-width: 1140px; }
+h1 { font-size: 1.7rem; font-weight: 700; }
+h2 { font-size: 1.3rem; color: var(--wsbc-orange); }
+h3 { font-size: 1.1rem; }
+
+.wsbc-header { background: #fff; border-bottom: 4px solid var(--wsbc-orange); }
+.wsbc-header__inner { display: flex; align-items: center; justify-content: space-between; padding-top: .75rem; padding-bottom: .75rem; }
+.wsbc-header__brand { display: flex; align-items: baseline; gap: .75rem; text-decoration: none; color: var(--wsbc-body); }
+.wsbc-header__logo { font-weight: 800; font-size: 1.25rem; color: var(--wsbc-orange); }
+.wsbc-header__app { font-size: 1.1rem; font-weight: 600; }
+.wsbc-header__user { color: var(--wsbc-warm-grey); }
+
+.btn-wsbc { background: var(--wsbc-orange); border-color: var(--wsbc-orange); color: #fff; font-weight: 600; }
+.btn-wsbc:hover, .btn-wsbc:focus { background: #d27c00; border-color: #d27c00; color: #fff; }
+.btn-wsbc:disabled { background: var(--wsbc-steel); border-color: var(--wsbc-steel); color: #fff; }
+.btn-wsbc-outline { background: #fff; border: 1px solid var(--wsbc-orange); color: var(--wsbc-orange); font-weight: 600; }
+.btn-wsbc-outline:hover { background: var(--wsbc-orange); color: #fff; }
+
+.wsbc-search { background: var(--wsbc-ash); padding: 1.25rem 0; }
+.wsbc-filters h3 { font-size: .95rem; margin-top: 1rem; font-weight: 700; }
+.wsbc-card { border: 1px solid var(--wsbc-silver); border-radius: .5rem; padding: 1rem; margin-bottom: .75rem; background: #fff; }
+.wsbc-card:hover { border-color: var(--wsbc-orange); box-shadow: 0 2px 8px rgba(0, 0, 0, .08); }
+.wsbc-card__title { font-size: 1.15rem; font-weight: 700; color: var(--wsbc-body); text-decoration: none; }
+.wsbc-card__title:hover { color: var(--wsbc-orange); }
+.wsbc-meta { color: var(--wsbc-warm-grey); font-size: .9rem; }
+
+.wsbc-badge { display: inline-block; padding: .15rem .5rem; border-radius: .25rem; font-size: .75rem; font-weight: 700; margin-right: .25rem; }
+.wsbc-badge--green { background: var(--wsbc-pale-moss); color: #5b5f1b; }
+.wsbc-badge--yellow { background: var(--wsbc-pale-yellow); color: #7a5a00; }
+.wsbc-badge--red { background: #f3dcdd; color: var(--wsbc-red); }
+.wsbc-badge--blue { background: var(--wsbc-pale-blue); color: #2f6075; }
+.wsbc-badge--grey { background: var(--wsbc-ash); color: var(--wsbc-warm-grey); }
+.wsbc-badge--gold { background: #FFF1C2; color: #7a5a00; }
+.wsbc-badge--silver { background: var(--wsbc-silver); color: var(--wsbc-iron); }
+.wsbc-badge--bronze { background: #f1dcc7; color: #7a4a1d; }
+
+.nav-tabs .nav-link { color: var(--wsbc-body); }
+.nav-tabs .nav-link.active { color: var(--wsbc-orange); border-bottom: 3px solid var(--wsbc-orange); font-weight: 700; }
+.wsbc-table th { background: var(--wsbc-ash); font-weight: 700; }
+.wsbc-aside { border-left: 1px solid var(--wsbc-silver); }
+.wsbc-lineage { list-style: none; padding: 0; }
+.wsbc-lineage li { padding: .4rem .6rem; border-left: 3px solid var(--wsbc-blue); background: var(--wsbc-ash); margin-bottom: .35rem; font-size: .9rem; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--wsbc-blue); outline-offset: 2px; }
