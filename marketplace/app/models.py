@@ -12,7 +12,7 @@ class ProductSummary(BaseModel):
     domain: str | None
     owners: list[str]
     steward: str | None
-    certification: Literal["Gold", "Silver", "Bronze"] | None
+    certification: str | None
     table_count: int
     quality: int | None
     sensitivity: Sensitivity

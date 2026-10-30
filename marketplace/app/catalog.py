@@ -136,7 +136,8 @@ class CatalogService:
         edges: list[tuple[str, str]] = []
         for fqn in nodes:
             graph = self._client.get(f"/lineage/table/name/{quote(fqn, safe='')}", {"upstreamDepth": 1, "downstreamDepth": 1})
-            names = {n["id"]: n["fullyQualifiedName"] for n in graph.get("nodes", [])}
+            # Only tables can belong to a data product; dashboards, pipelines etc. are not shown.
+            names = {n["id"]: n["fullyQualifiedName"] for n in graph.get("nodes", []) if n.get("type", "table") == "table"}
             names[graph["entity"]["id"]] = graph["entity"]["fullyQualifiedName"]
             for edge in graph.get("upstreamEdges", []) + graph.get("downstreamEdges", []):
                 pair = (names.get(edge["fromEntity"]), names.get(edge["toEntity"]))

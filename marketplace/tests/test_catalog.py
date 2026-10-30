@@ -59,3 +59,19 @@ def test_second_call_within_ttl_makes_no_extra_requests(service, fake):
     n = len(fake.requests)
     service.list_products()
     assert len(fake.requests) == n
+
+
+def test_non_table_lineage_neighbours_are_ignored_without_failing(service, fake):
+    detail = service.get_product("internet-sales-mart")
+    assert all("Dashboard" not in n for n in detail.lineage.nodes)
+    assert not [r for r in fake.requests if "SalesDashboard" in r], "must not look a dashboard up as a table"
+
+
+def test_custom_certification_value_passes_through(fake, monkeypatch):
+    from tests import fake_omd
+
+    custom = [{**fake_omd.PRODUCTS[0], "certification": {"tagLabel": {"tagFQN": "Certification.Platinum"}}}]
+    monkeypatch.setattr(fake_omd, "PRODUCTS", custom)
+    client = OmdClient(make_settings(), transport=httpx.MockTransport(fake))
+    products = CatalogService(client, ttl_seconds=0).list_products()
+    assert products[0].certification == "Platinum"

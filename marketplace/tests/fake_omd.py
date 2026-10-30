@@ -67,9 +67,11 @@ class FakeOmd:
             if fqn == FACT:
                 return httpx.Response(200, json={
                     "entity": {"id": "t1", "fullyQualifiedName": FACT},
-                    "nodes": [{"id": "d1", "fullyQualifiedName": DIM}, {"id": "t2", "fullyQualifiedName": VIEW}],
+                    "nodes": [{"id": "d1", "type": "table", "fullyQualifiedName": DIM},
+                              {"id": "t2", "type": "table", "fullyQualifiedName": VIEW},
+                              {"id": "dash1", "type": "dashboard", "fullyQualifiedName": "bi.SalesDashboard"}],
                     "upstreamEdges": [{"fromEntity": "d1", "toEntity": "t1"}],
-                    "downstreamEdges": [{"fromEntity": "t1", "toEntity": "t2"}],
+                    "downstreamEdges": [{"fromEntity": "t1", "toEntity": "t2"}, {"fromEntity": "t1", "toEntity": "dash1"}],
                 })
             return httpx.Response(200, json={"entity": {"id": "x", "fullyQualifiedName": fqn},
                                              "nodes": [], "upstreamEdges": [], "downstreamEdges": []})

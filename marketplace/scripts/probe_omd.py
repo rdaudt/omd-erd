@@ -16,6 +16,16 @@ def load_env() -> dict[str, str]:
     return values
 
 
+def remove_probe_property(client: httpx.Client, type_id: str) -> None:
+    """Leave nothing behind: drop the throwaway property the probe just added."""
+    props = client.get(f"/metadata/types/{type_id}", params={"fields": "customProperties"}).json().get("customProperties", [])
+    for index, prop in enumerate(props):
+        if prop["name"] == "probeTmp":
+            client.patch(f"/metadata/types/{type_id}", headers={"Content-Type": "application/json-patch+json"},
+                         json=[{"op": "remove", "path": f"/customProperties/{index}"}])
+            return
+
+
 def main() -> int:
     env = load_env()
     host = env["OMD_HOST"].rstrip("/")
@@ -36,6 +46,7 @@ def main() -> int:
             if t["name"] == "string"), "type": "type"}}
         r = client.put(f"/metadata/types/{dp_type['id']}", json=prop)
         report("custom property on dataProduct", r.status_code in (200, 201), f"(HTTP {r.status_code})")
+        remove_probe_property(client, dp_type["id"])
     else:
         report("custom property on dataProduct", False, "(dataProduct type not found)")
 
