@@ -1,0 +1,42 @@
+/* A look-alike of the standard ServiceNow UI for the demo. Deliberately unrelated to the WorkSafeBC styling. */
+:root {
+  --sn-dark: #293e40;
+  --sn-green: #62d84e;
+  --sn-text: #2b2b2b;
+  --sn-muted: #6e7780;
+  --sn-border: #c5cacf;
+  --sn-bg: #f2f4f6;
+  --sn-link: #1f8476;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--sn-bg); color: var(--sn-text); font-family: "Source Sans Pro", "Segoe UI", Arial, sans-serif; font-size: 14px; }
+
+.sn-banner { display: flex; justify-content: space-between; align-items: center; background: var(--sn-dark); color: #fff; height: 48px; padding: 0 16px; }
+.sn-banner__left, .sn-banner__right { display: flex; align-items: center; gap: 20px; }
+.sn-logo { font-size: 22px; font-weight: 700; letter-spacing: -.5px; color: var(--sn-green); }
+.sn-nav { display: flex; gap: 18px; color: #dfe6e6; }
+.sn-search { background: rgba(255, 255, 255, .12); padding: 6px 12px; border-radius: 4px; color: #dfe6e6; min-width: 160px; }
+.sn-avatar { background: #5a7d80; border-radius: 50%; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
+
+.sn-main { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+.sn-crumbs { color: var(--sn-muted); margin-bottom: 10px; }
+.sn-crumbs a { color: var(--sn-link); text-decoration: none; }
+.sn-success { background: #e8f7e4; border: 1px solid #9ad98e; border-left: 5px solid #3fa535; padding: 12px 16px; margin-bottom: 16px; border-radius: 3px; }
+.sn-success strong { display: block; font-size: 15px; margin-bottom: 2px; }
+
+.sn-form { background: #fff; border: 1px solid var(--sn-border); border-radius: 3px; }
+.sn-form__head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--sn-border); background: #fafbfc; }
+.sn-form__head h1 { font-size: 18px; margin: 0; font-weight: 600; }
+.sn-form__actions { color: var(--sn-muted); display: flex; gap: 14px; }
+.sn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 32px; padding: 18px 16px; }
+.sn-field label { display: block; font-size: 12px; color: var(--sn-muted); margin-bottom: 3px; }
+.sn-field .sn-value { border: 1px solid var(--sn-border); background: #f7f8f9; padding: 7px 9px; min-height: 32px; border-radius: 2px; word-break: break-word; }
+.sn-field--wide { grid-column: 1 / -1; }
+.sn-field--wide .sn-value { min-height: 72px; white-space: pre-wrap; }
+.sn-tabs { display: flex; border-top: 1px solid var(--sn-border); padding: 0 16px; gap: 4px; }
+.sn-tab { padding: 10px 14px; color: var(--sn-muted); }
+.sn-tab--active { color: var(--sn-text); border-bottom: 3px solid var(--sn-green); font-weight: 600; }
+.sn-muted { color: var(--sn-muted); }
+.sn-notfound { background: #fff; border: 1px solid var(--sn-border); padding: 40px; text-align: center; border-radius: 3px; }
+
+@media (max-width: 700px) { .sn-grid { grid-template-columns: 1fr; } .sn-nav { display: none; } }
