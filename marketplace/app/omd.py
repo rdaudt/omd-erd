@@ -24,6 +24,8 @@ class OmdClient:
     def _request(self, method: str, path: str, **kwargs) -> dict:
         try:
             response = self._http.request(method, path, **kwargs)
+        except httpx.TimeoutException:
+            raise OmdError(503, "OpenMetadata timed out.") from None
         except httpx.HTTPError:
             raise OmdError(503, "Cannot reach OpenMetadata. Is it running?") from None
         if response.status_code == 401:

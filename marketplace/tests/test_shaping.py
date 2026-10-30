@@ -34,7 +34,7 @@ def test_quality_buckets():
 
 
 def test_sensitivity_highest_wins():
-    assert derive_sensitivity(["PII.Sensitive", "Sensitivity.Internal"]) == "Confidential"
+    assert derive_sensitivity(["PII.Sensitive", "PersonalData.Personal"]) == "Confidential"
     assert derive_sensitivity(["PersonalData.Personal"]) == "Confidential"
     assert derive_sensitivity(["Sensitivity.Internal"]) == "Internal"
     assert derive_sensitivity([]) == "Public"
@@ -73,3 +73,9 @@ def test_facets_list_distinct_sorted_values():
     assert f["domain"] == ["HR", "Sales"]
     assert f["quality"] == ["90+", "n/a"]
     assert f["certification"] == ["Gold"]
+
+
+def test_explicit_sensitivity_tag_wins_over_column_pii():
+    assert derive_sensitivity(["PII.Sensitive", "Sensitivity.Internal"]) == "Internal"
+    assert derive_sensitivity(["PII.Sensitive", "Sensitivity.Public"]) == "Public"
+    assert derive_sensitivity(["Sensitivity.Public", "Sensitivity.Confidential"]) == "Confidential"

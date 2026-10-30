@@ -73,3 +73,11 @@ def test_tables_join_the_domain_before_the_product(omd):
     domain_write = next(w for w in store.writes if w[1] == f"/domains/{product.domain}/assets/add")
     assert len(domain_write[2]["assets"]) == len(product.tables)
     assert all(a["type"] == "table" for a in domain_write[2]["assets"])
+
+
+def test_every_product_has_an_explicit_sensitivity_tag(omd):
+    store, client = omd
+    run_base_seed(client)
+    for name, product in store.entities["dataProducts"].items():
+        assert any(t["tagFQN"].startswith("Sensitivity.") for t in product["tags"]), name
+    assert set(store.entities["tags"]) >= {"Sensitivity.Public", "Sensitivity.Internal", "Sensitivity.Confidential"}

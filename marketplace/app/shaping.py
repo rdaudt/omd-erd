@@ -25,18 +25,17 @@ def quality_bucket(score: int | None) -> Bucket:
     return "70-89" if score >= 70 else "<70"
 
 
+def _highest(levels: list[Sensitivity]) -> Sensitivity:
+    return max(levels, key=_RANK.__getitem__, default="Public")
+
+
 def derive_sensitivity(tag_fqns: list[str]) -> Sensitivity:
-    level: Sensitivity = "Public"
-    for fqn in tag_fqns:
-        if fqn.startswith(("PII.Sensitive", "PersonalData.")):
-            found: Sensitivity = "Confidential"
-        elif fqn == "Sensitivity.Internal":
-            found = "Internal"
-        else:
-            continue
-        if _RANK[found] > _RANK[level]:
-            level = found
-    return level
+    """An explicit Sensitivity.* tag set by the data owner wins; otherwise infer from PII tags."""
+    explicit = [fqn.removeprefix("Sensitivity.") for fqn in tag_fqns if fqn.startswith("Sensitivity.")]
+    if explicit:
+        return _highest([lvl for lvl in explicit if lvl in _RANK])
+    pii = ["Confidential" for fqn in tag_fqns if fqn.startswith(("PII.Sensitive", "PersonalData."))]
+    return _highest(pii)
 
 
 def filter_products(

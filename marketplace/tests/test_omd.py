@@ -58,3 +58,12 @@ def test_host_without_api_suffix_gets_api_v1(omd_client_factory):
 
     OmdClient(make_settings(OMD_HOST="http://omd.test"), transport=httpx.MockTransport(handler)).get("/x")
     assert seen["path"] == "/api/v1/x"
+
+
+def test_timeout_is_reported_as_timeout_not_unreachable(omd_client_factory):
+    def handler(request):
+        raise httpx.ReadTimeout("slow")
+
+    with pytest.raises(OmdError) as exc:
+        omd_client_factory(handler).get("/tables")
+    assert "timed out" in exc.value.message.lower()

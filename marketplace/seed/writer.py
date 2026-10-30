@@ -30,9 +30,11 @@ def ensure_domain(client: OmdClient, name: str) -> None:
     client.put("/domains", {"name": name, "displayName": name, "description": f"{name} data", "domainType": "Aggregate"})
 
 
-def ensure_classification_tag(client: OmdClient, classification: str = d.SENSITIVITY_CLASSIFICATION, tag: str = "Internal") -> None:
+def ensure_classification_tags(client: OmdClient, classification: str = d.SENSITIVITY_CLASSIFICATION,
+                               tags: tuple[str, ...] = ("Public", "Internal", "Confidential")) -> None:
     client.put("/classifications", {"name": classification, "description": "Data sensitivity levels used by the marketplace demo"})
-    client.put("/tags", {"classification": classification, "name": tag, "description": f"{tag} data"})
+    for tag in tags:
+        client.put("/tags", {"classification": classification, "name": tag, "description": f"{tag} data"})
 
 
 def ensure_custom_property(client: OmdClient, entity_type: str = "dataProduct", name: str = d.ENTRA_PROPERTY) -> None:
@@ -65,10 +67,8 @@ def _table_refs(client: OmdClient, tables: list[str]) -> list[dict]:
 def ensure_product(client: OmdClient, product: d.ProductDef) -> str:
     refs = _table_refs(client, product.tables)
     owner = client.get(f"/users/name/{product.owner}")
-    tags = []
-    if product.sensitivity_tag:
-        tags.append({"tagFQN": f"{d.SENSITIVITY_CLASSIFICATION}.{product.sensitivity_tag}",
-                     "source": "Classification", "labelType": "Manual", "state": "Confirmed"})
+    tags = [{"tagFQN": f"{d.SENSITIVITY_CLASSIFICATION}.{product.sensitivity_tag}",
+             "source": "Classification", "labelType": "Manual", "state": "Confirmed"}]
     created = client.put("/dataProducts", {
         "name": product.name, "displayName": product.display_name, "description": product.description,
         "domains": [product.domain], "owners": [{"id": owner["id"], "type": "user"}],

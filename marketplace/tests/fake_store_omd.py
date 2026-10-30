@@ -35,6 +35,15 @@ class StoreOmd:
         if path.startswith("/tables/name/"):
             fqn = unquote(path.removeprefix("/tables/name/"))
             return httpx.Response(200, json=self.tables[fqn]) if fqn in self.tables else httpx.Response(404, json={})
+        if method == "PUT" and path == "/dataQuality/testCases":
+            key = f"{body['entityLink']}|{body['name']}"
+            table_fqn = body["entityLink"].split("::")[2].rstrip(">")
+            self.entities["dataQuality/testCases"][key] = {**body, "fullyQualifiedName": f"{table_fqn}.{body['name']}"}
+            return httpx.Response(201, json=self.entities["dataQuality/testCases"][key])
+        if method == "POST" and path.startswith("/dataQuality/testCases/testCaseResults/"):
+            return httpx.Response(200, json={})
+        if method == "PUT" and path == "/lineage":
+            return httpx.Response(200, json={})
         if method == "PUT" and path.endswith("/assets/add"):
             return httpx.Response(200, json={"status": "success"})
         for collection in COLLECTIONS:
